@@ -93,8 +93,8 @@ class _EditTransactionScreenState extends State<EditTransactionScreen> {
 
       final response = await _apiService.createTransaction(transactionData);
       if (response.statusCode == 200 && mounted) {
-        AppLogger.info('交易创建成功，返回上一页面');
-        context.pop(); // Go back to the previous screen
+        AppLogger.info('交易创建成功，返回首页');
+        context.go('/'); // Navigate to home screen
       } else {
         AppLogger.warning(
             '交易创建失败', 'HTTP ${response.statusCode}: ${response.body}');

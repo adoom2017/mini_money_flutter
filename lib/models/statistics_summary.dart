@@ -11,9 +11,9 @@ class StatisticsSummary {
 
   factory StatisticsSummary.fromJson(Map<String, dynamic> json) {
     return StatisticsSummary(
-      totalIncome: (json['totalIncome'] as num).toDouble(),
-      totalExpense: (json['totalExpense'] as num).toDouble(),
-      balance: (json['balance'] as num).toDouble(),
+      totalIncome: (json['totalIncome'] ?? 0).toDouble(),
+      totalExpense: (json['totalExpense'] ?? 0).toDouble(),
+      balance: (json['balance'] ?? 0).toDouble(),
     );
   }
 }
@@ -29,11 +29,11 @@ class CategoryStat {
     required this.percentage,
   });
 
-    factory CategoryStat.fromJson(Map<String, dynamic> json) {
+  factory CategoryStat.fromJson(Map<String, dynamic> json) {
     return CategoryStat(
-      categoryKey: json['categoryKey'],
-      total: (json['total'] as num).toDouble(),
-      percentage: (json['percentage'] as num).toDouble(),
+      categoryKey: json['categoryKey'] ?? '',
+      total: (json['amount'] ?? json['total'] ?? 0).toDouble(),
+      percentage: (json['percentage'] ?? 0).toDouble(),
     );
   }
 }
