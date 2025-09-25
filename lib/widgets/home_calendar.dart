@@ -54,14 +54,7 @@ class _HomeCalendarState extends State<HomeCalendar> {
           t.date.month == day.month &&
           t.date.day == day.day;
     }).toList();
-    AppLogger.info(
-        '_getEventsForDay called for ${day.toIso8601String()}: found ${events.length} events');
-    if (events.isNotEmpty) {
-      for (var event in events) {
-        AppLogger.info(
-            '  - Transaction: ${event.date.toIso8601String()}, amount: ${event.amount}');
-      }
-    }
+
     return events;
   }
 
@@ -130,8 +123,6 @@ class _HomeCalendarState extends State<HomeCalendar> {
         ),
         calendarBuilders: CalendarBuilders(
           markerBuilder: (context, day, events) {
-            AppLogger.info(
-                'markerBuilder called for ${day.toIso8601String()} with ${events.length} events');
             if (events.isNotEmpty) {
               return _buildEventsMarker(day, events);
             }
@@ -163,9 +154,6 @@ class _HomeCalendarState extends State<HomeCalendar> {
             t.date.day == day.day)
         .toList();
 
-    AppLogger.info(
-        'Building event marker for ${day.toIso8601String()} with ${dayTransactions.length} transactions');
-
     if (dayTransactions.isEmpty) {
       return Container();
     }
@@ -187,14 +175,14 @@ class _HomeCalendarState extends State<HomeCalendar> {
         children: [
           if (income > 0)
             Container(
-              padding: EdgeInsets.symmetric(horizontal: 2, vertical: 1),
+              padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 1),
               decoration: BoxDecoration(
                 color: CupertinoColors.systemGreen,
                 borderRadius: BorderRadius.circular(2),
               ),
               child: Text(
                 '+${income.toInt()}',
-                style: TextStyle(
+                style: const TextStyle(
                   color: CupertinoColors.white,
                   fontSize: 8,
                   fontWeight: FontWeight.w600,
@@ -203,14 +191,14 @@ class _HomeCalendarState extends State<HomeCalendar> {
             ),
           if (expense > 0)
             Container(
-              padding: EdgeInsets.symmetric(horizontal: 2, vertical: 1),
+              padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 1),
               decoration: BoxDecoration(
                 color: CupertinoColors.systemRed,
                 borderRadius: BorderRadius.circular(2),
               ),
               child: Text(
                 '-${expense.toInt()}',
-                style: TextStyle(
+                style: const TextStyle(
                   color: CupertinoColors.white,
                   fontSize: 8,
                   fontWeight: FontWeight.w600,
