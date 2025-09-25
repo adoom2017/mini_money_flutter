@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
@@ -60,8 +61,18 @@ class _EditTransactionScreenState extends State<EditTransactionScreen> {
           _isLoading = false;
         });
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('加载分类失败')),
+          showCupertinoDialog(
+            context: context,
+            builder: (context) => CupertinoAlertDialog(
+              title: const Text('加载失败'),
+              content: const Text('加载分类失败'),
+              actions: [
+                CupertinoDialogAction(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text('确定'),
+                ),
+              ],
+            ),
           );
         }
       }
@@ -71,8 +82,18 @@ class _EditTransactionScreenState extends State<EditTransactionScreen> {
         _isLoading = false;
       });
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('加载分类时发生错误')),
+        showCupertinoDialog(
+          context: context,
+          builder: (context) => CupertinoAlertDialog(
+            title: const Text('错误'),
+            content: const Text('加载分类时发生错误'),
+            actions: [
+              CupertinoDialogAction(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('确定'),
+              ),
+            ],
+          ),
         );
       }
     }
@@ -86,7 +107,7 @@ class _EditTransactionScreenState extends State<EditTransactionScreen> {
         'type': _type,
         'categoryKey': _selectedCategoryKey,
         'description': _description,
-        'date': _selectedDate.toIso8601String(),
+        'date': DateFormat('yyyy-MM-dd').format(_selectedDate),
       };
 
       AppLogger.info('提交交易数据', transactionData);
@@ -98,8 +119,18 @@ class _EditTransactionScreenState extends State<EditTransactionScreen> {
       } else {
         AppLogger.warning(
             '交易创建失败', 'HTTP ${response.statusCode}: ${response.body}');
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to save transaction.')),
+        showCupertinoDialog(
+          context: context,
+          builder: (context) => CupertinoAlertDialog(
+            title: const Text('保存失败'),
+            content: const Text('保存交易失败'),
+            actions: [
+              CupertinoDialogAction(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('确定'),
+              ),
+            ],
+          ),
         );
       }
     } else {
@@ -112,80 +143,206 @@ class _EditTransactionScreenState extends State<EditTransactionScreen> {
     final categories =
         _type == 'expense' ? _expenseCategories : _incomeCategories;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Add Transaction'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.save),
-            onPressed: _submit,
-          ),
-        ],
+    return CupertinoPageScaffold(
+      navigationBar: CupertinoNavigationBar(
+        middle: const Text('添加交易'),
+        trailing: CupertinoButton(
+          padding: EdgeInsets.zero,
+          onPressed: _submit,
+          child: const Text('保存'),
+        ),
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : Form(
-              key: _formKey,
-              child: ListView(
-                padding: const EdgeInsets.all(16.0),
+      child: SafeArea(
+        child: _isLoading
+            ? const Center(child: CupertinoActivityIndicator())
+            : Form(
+                key: _formKey,
+                child: CustomScrollView(
+                  slivers: [
+                    SliverToBoxAdapter(
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Column(
+                          children: [
+                            // 交易类型选择
+                            CupertinoSlidingSegmentedControl<String>(
+                              groupValue: _type,
+                              onValueChanged: (value) {
+                                setState(() {
+                                  _type = value!;
+                                  _selectedCategoryKey = null;
+                                });
+                              },
+                              children: const {
+                                'expense': Padding(
+                                  padding: EdgeInsets.symmetric(horizontal: 20),
+                                  child: Text('支出'),
+                                ),
+                                'income': Padding(
+                                  padding: EdgeInsets.symmetric(horizontal: 20),
+                                  child: Text('收入'),
+                                ),
+                              },
+                            ),
+                            const SizedBox(height: 32),
+                          ],
+                        ),
+                      ),
+                    ),
+                    SliverToBoxAdapter(
+                      child: CupertinoFormSection.insetGrouped(
+                        header: const Text('交易详情'),
+                        children: [
+                          // 金额输入
+                          CupertinoTextFormFieldRow(
+                            prefix: const Icon(CupertinoIcons.money_dollar,
+                                color: CupertinoColors.systemGrey),
+                            placeholder: '金额',
+                            keyboardType: TextInputType.number,
+                            validator: (value) =>
+                                value!.isEmpty ? '请输入金额' : null,
+                            onSaved: (value) => _amount = double.parse(value!),
+                          ),
+                          // 分类选择
+                          CupertinoFormRow(
+                            prefix: const Icon(CupertinoIcons.tag,
+                                color: CupertinoColors.systemGrey),
+                            child: Row(
+                              children: [
+                                const Text('分类'),
+                                const Spacer(),
+                                GestureDetector(
+                                  onTap: () => _showCategoryPicker(categories),
+                                  child: Row(
+                                    children: [
+                                      Text(
+                                        _selectedCategoryKey ?? '请选择',
+                                        style: TextStyle(
+                                          color: _selectedCategoryKey != null
+                                              ? CupertinoColors.label
+                                              : CupertinoColors.placeholderText,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      const Icon(CupertinoIcons.forward,
+                                          size: 16,
+                                          color: CupertinoColors.systemGrey),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          // 描述输入
+                          CupertinoTextFormFieldRow(
+                            prefix: const Icon(CupertinoIcons.textformat,
+                                color: CupertinoColors.systemGrey),
+                            placeholder: '描述（可选）',
+                            onSaved: (value) => _description = value ?? '',
+                          ),
+                          // 日期选择
+                          CupertinoFormRow(
+                            prefix: const Icon(CupertinoIcons.calendar,
+                                color: CupertinoColors.systemGrey),
+                            child: Row(
+                              children: [
+                                const Text('日期'),
+                                const Spacer(),
+                                GestureDetector(
+                                  onTap: () => _showDatePicker(),
+                                  child: Row(
+                                    children: [
+                                      Text(
+                                        DateFormat.yMMMd('zh_CN')
+                                            .format(_selectedDate),
+                                        style: const TextStyle(
+                                            color: CupertinoColors.label),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      const Icon(CupertinoIcons.forward,
+                                          size: 16,
+                                          color: CupertinoColors.systemGrey),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+      ),
+    );
+  }
+
+  void _showCategoryPicker(List<TransactionCategory> categories) {
+    showCupertinoModalPopup(
+      context: context,
+      builder: (context) => CupertinoActionSheet(
+        title: const Text('选择分类'),
+        actions: categories.map((category) {
+          return CupertinoActionSheetAction(
+            onPressed: () {
+              setState(() {
+                _selectedCategoryKey = category.key;
+              });
+              Navigator.of(context).pop();
+            },
+            child: Text(category.key),
+          );
+        }).toList(),
+        cancelButton: CupertinoActionSheetAction(
+          isDestructiveAction: true,
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('取消'),
+        ),
+      ),
+    );
+  }
+
+  void _showDatePicker() {
+    showCupertinoModalPopup(
+      context: context,
+      builder: (context) => Container(
+        height: 250,
+        color: CupertinoColors.systemBackground.resolveFrom(context),
+        child: Column(
+          children: [
+            Container(
+              color: CupertinoColors.systemGrey6.resolveFrom(context),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  SegmentedButton<String>(
-                    segments: const [
-                      ButtonSegment(value: 'expense', label: Text('Expense')),
-                      ButtonSegment(value: 'income', label: Text('Income')),
-                    ],
-                    selected: {_type},
-                    onSelectionChanged: (newSelection) {
-                      setState(() {
-                        _type = newSelection.first;
-                        _selectedCategoryKey =
-                            null; // Reset category on type change
-                      });
-                    },
+                  CupertinoButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: const Text('取消'),
                   ),
-                  TextFormField(
-                    decoration: const InputDecoration(labelText: 'Amount'),
-                    keyboardType: TextInputType.number,
-                    validator: (value) =>
-                        value!.isEmpty ? 'Please enter an amount.' : null,
-                    onSaved: (value) => _amount = double.parse(value!),
-                  ),
-                  DropdownButtonFormField<String>(
-                    decoration: const InputDecoration(labelText: 'Category'),
-                    value: _selectedCategoryKey,
-                    items: categories
-                        .map((cat) => DropdownMenuItem(
-                            value: cat.key, child: Text(cat.key)))
-                        .toList(),
-                    onChanged: (value) =>
-                        setState(() => _selectedCategoryKey = value),
-                    validator: (value) =>
-                        value == null ? 'Please select a category.' : null,
-                  ),
-                  TextFormField(
-                    decoration: const InputDecoration(labelText: 'Description'),
-                    onSaved: (value) => _description = value ?? '',
-                  ),
-                  const SizedBox(height: 16),
-                  ListTile(
-                    title: const Text('Date'),
-                    subtitle: Text(DateFormat.yMMMd().format(_selectedDate)),
-                    trailing: const Icon(Icons.calendar_today),
-                    onTap: () async {
-                      final pickedDate = await showDatePicker(
-                        context: context,
-                        initialDate: _selectedDate,
-                        firstDate: DateTime(2020),
-                        lastDate: DateTime.now(),
-                      );
-                      if (pickedDate != null) {
-                        setState(() => _selectedDate = pickedDate);
-                      }
-                    },
+                  CupertinoButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: const Text('完成'),
                   ),
                 ],
               ),
             ),
+            Expanded(
+              child: CupertinoDatePicker(
+                mode: CupertinoDatePickerMode.date,
+                initialDateTime: _selectedDate,
+                maximumDate: DateTime.now(),
+                minimumDate: DateTime(2020),
+                onDateTimeChanged: (date) {
+                  setState(() {
+                    _selectedDate = date;
+                  });
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

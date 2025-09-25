@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../api/api_service.dart';
 import '../models/transaction.dart';
 import '../models/statistics_summary.dart';
+import '../utils/app_logger.dart';
 
 class HomeProvider with ChangeNotifier {
   final ApiService _apiService = ApiService();
@@ -66,10 +67,32 @@ class HomeProvider with ChangeNotifier {
   Future<void> _fetchTransactionsForMonth() async {
     final monthStr =
         "${_selectedMonth.year}-${_selectedMonth.month.toString().padLeft(2, '0')}";
+
+    AppLogger.info(
+        'HomeProvider._fetchTransactionsForMonth called with monthStr: $monthStr');
+
     final response = await _apiService.getTransactions(m: monthStr);
+
+    AppLogger.info('API response status: ${response.statusCode}');
+
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body) as List;
+      AppLogger.info('Raw API response data length: ${data.length}');
+      AppLogger.info('Raw API response: ${response.body}');
+
       _transactions = data.map((item) => Transaction.fromJson(item)).toList();
+
+      AppLogger.info('Parsed transactions count: ${_transactions.length}');
+      for (var t in _transactions) {
+        AppLogger.info(
+            '  Transaction: date=${t.date.toIso8601String()}, amount=${t.amount}, type=${t.type}');
+      }
+
+      AppLogger.info(
+          'HomeProvider._transactions list now has ${_transactions.length} items');
+    } else {
+      AppLogger.error(
+          'Failed to fetch transactions, status: ${response.statusCode}');
     }
   }
 }

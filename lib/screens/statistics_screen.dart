@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -14,32 +15,40 @@ class StatisticsScreen extends StatelessWidget {
       create: (_) => StatisticsProvider(),
       child: Consumer<StatisticsProvider>(
         builder: (context, provider, child) {
-          return Scaffold(
-            appBar: AppBar(
-              title: const Text('Statistics'),
-              actions: [
-                TextButton.icon(
-                  icon: const Icon(Icons.calendar_today, color: Colors.white),
-                  label: Text(
-                    DateFormat('yyyy-MM').format(provider.selectedDate),
-                    style: const TextStyle(color: Colors.white),
-                  ),
-                  onPressed: () => provider.selectMonth(context),
+          return CupertinoPageScaffold(
+            navigationBar: CupertinoNavigationBar(
+              middle: const Text('统计'),
+              trailing: GestureDetector(
+                onTap: () => provider.selectMonth(context),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      DateFormat('yyyy-MM').format(provider.selectedDate),
+                      style: const TextStyle(color: CupertinoColors.activeBlue),
+                    ),
+                    const SizedBox(width: 4),
+                    const Icon(CupertinoIcons.calendar,
+                        size: 18, color: CupertinoColors.activeBlue),
+                  ],
                 ),
-              ],
+              ),
             ),
-            body: provider.isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : _buildStatisticsBody(context, provider),
+            child: SafeArea(
+              child: provider.isLoading
+                  ? const Center(child: CupertinoActivityIndicator())
+                  : _buildStatisticsBody(context, provider),
+            ),
           );
         },
       ),
     );
   }
 
-  Widget _buildStatisticsBody(BuildContext context, StatisticsProvider provider) {
+  Widget _buildStatisticsBody(
+      BuildContext context, StatisticsProvider provider) {
     if (provider.summary == null) {
-      return const Center(child: Text('No data available for this month.'));
+      return const Center(child: Text('本月暂无数据'));
     }
 
     final currencyFormat = NumberFormat.currency(symbol: '¥');
@@ -49,28 +58,35 @@ class StatisticsScreen extends StatelessWidget {
       children: [
         _buildSummaryCard(context, provider.summary!, currencyFormat),
         const SizedBox(height: 24),
-        _buildCategoryChart(context, 'Expense Breakdown', provider.expenseStats, Colors.red),
+        _buildCategoryChart(
+            context, 'Expense Breakdown', provider.expenseStats, Colors.red),
         const SizedBox(height: 24),
-        _buildCategoryChart(context, 'Income Breakdown', provider.incomeStats, Colors.green),
+        _buildCategoryChart(
+            context, 'Income Breakdown', provider.incomeStats, Colors.green),
       ],
     );
   }
 
-  Widget _buildSummaryCard(BuildContext context, StatisticsSummary summary, NumberFormat format) {
+  Widget _buildSummaryCard(
+      BuildContext context, StatisticsSummary summary, NumberFormat format) {
     return Card(
       elevation: 4,
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            Text('Monthly Summary', style: Theme.of(context).textTheme.titleLarge),
+            Text('Monthly Summary',
+                style: Theme.of(context).textTheme.titleLarge),
             const SizedBox(height: 16),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                _buildSummaryItem('Income', format.format(summary.totalIncome), Colors.green),
-                _buildSummaryItem('Expense', format.format(summary.totalExpense), Colors.red),
-                _buildSummaryItem('Balance', format.format(summary.balance), Theme.of(context).colorScheme.primary),
+                _buildSummaryItem(
+                    'Income', format.format(summary.totalIncome), Colors.green),
+                _buildSummaryItem(
+                    'Expense', format.format(summary.totalExpense), Colors.red),
+                _buildSummaryItem('Balance', format.format(summary.balance),
+                    Theme.of(context).colorScheme.primary),
               ],
             ),
           ],
@@ -84,12 +100,15 @@ class StatisticsScreen extends StatelessWidget {
       children: [
         Text(title, style: const TextStyle(fontSize: 16)),
         const SizedBox(height: 4),
-        Text(value, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: color)),
+        Text(value,
+            style: TextStyle(
+                fontSize: 18, fontWeight: FontWeight.bold, color: color)),
       ],
     );
   }
 
-  Widget _buildCategoryChart(BuildContext context, String title, List<CategoryStat> stats, Color barColor) {
+  Widget _buildCategoryChart(BuildContext context, String title,
+      List<CategoryStat> stats, Color barColor) {
     return Card(
       elevation: 4,
       child: Padding(
@@ -122,7 +141,9 @@ class StatisticsScreen extends StatelessWidget {
                       );
                     }).toList(),
                     titlesData: FlTitlesData(
-                      leftTitles: const AxisTitles(sideTitles: SideTitles(showTitles: true, reservedSize: 40)),
+                      leftTitles: const AxisTitles(
+                          sideTitles:
+                              SideTitles(showTitles: true, reservedSize: 40)),
                       bottomTitles: AxisTitles(
                         sideTitles: SideTitles(
                           showTitles: true,
@@ -133,8 +154,10 @@ class StatisticsScreen extends StatelessWidget {
                           reservedSize: 30,
                         ),
                       ),
-                      topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                      rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                      topTitles: const AxisTitles(
+                          sideTitles: SideTitles(showTitles: false)),
+                      rightTitles: const AxisTitles(
+                          sideTitles: SideTitles(showTitles: false)),
                     ),
                   ),
                 ),
