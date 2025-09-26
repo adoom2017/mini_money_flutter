@@ -1,4 +1,5 @@
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/asset_provider.dart';
 import '../models/asset.dart';
@@ -34,15 +35,14 @@ class AssetsScreen extends StatelessWidget {
                         Positioned(
                           bottom: 20,
                           right: 20,
-                          child: CupertinoButton.filled(
-                            padding: const EdgeInsets.all(16),
-                            borderRadius: BorderRadius.circular(30),
-                            child: const Icon(
-                              CupertinoIcons.add,
-                              color: CupertinoColors.white,
-                            ),
+                          child: FloatingActionButton(
                             onPressed: () =>
                                 _showAddAssetDialog(context, provider),
+                            backgroundColor: const Color(0xFF1976D2), // 更亮的蓝色
+                            foregroundColor: Colors.white,
+                            elevation: 8,
+                            shape: const CircleBorder(), // 明确设置为圆形
+                            child: const Icon(Icons.add, size: 28),
                           ),
                         ),
                       ],

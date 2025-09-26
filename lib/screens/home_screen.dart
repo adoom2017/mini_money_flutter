@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/gestures.dart';
 import 'package:go_router/go_router.dart';
@@ -513,40 +514,58 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           child: provider.isLoading
               ? const Center(child: CupertinoActivityIndicator())
-              : SafeArea(
-                  child: Column(
-                    children: [
-                      // 月份选择器
-                      _buildMonthSelector(provider),
-                      // 日历视图 - 动态高度
-                      Container(
-                        height: CustomCalendar.calculateHeight(
-                            provider.selectedMonth),
-                        margin: const EdgeInsets.symmetric(horizontal: 16),
-                        decoration: BoxDecoration(
-                          color: CupertinoColors.systemBackground,
-                          borderRadius: BorderRadius.circular(12),
-                          boxShadow: [
-                            BoxShadow(
-                              color: CupertinoColors.separator.withOpacity(0.3),
-                              spreadRadius: 0,
-                              blurRadius: 8,
-                              offset: const Offset(0, 1),
+              : Stack(
+                  children: [
+                    SafeArea(
+                      child: Column(
+                        children: [
+                          // 月份选择器
+                          _buildMonthSelector(provider),
+                          // 日历视图 - 动态高度
+                          Container(
+                            height: CustomCalendar.calculateHeight(
+                                provider.selectedMonth),
+                            margin: const EdgeInsets.symmetric(horizontal: 16),
+                            decoration: BoxDecoration(
+                              color: CupertinoColors.systemBackground,
+                              borderRadius: BorderRadius.circular(12),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: CupertinoColors.separator
+                                      .withOpacity(0.3),
+                                  spreadRadius: 0,
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 1),
+                                ),
+                              ],
                             ),
-                          ],
-                        ),
-                        child: CustomCalendar(
-                          focusedMonth: provider.selectedMonth,
-                          selectedDay: _selectedDate,
-                          transactions: provider.transactions,
-                          onDaySelected: _fetchTransactionsForDay,
-                        ),
+                            child: CustomCalendar(
+                              focusedMonth: provider.selectedMonth,
+                              selectedDay: _selectedDate,
+                              transactions: provider.transactions,
+                              onDaySelected: _fetchTransactionsForDay,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          // 选中日期的交易详情 - 可滚动列表
+                          _buildSelectedDaySection(),
+                        ],
                       ),
-                      const SizedBox(height: 16),
-                      // 选中日期的交易详情 - 可滚动列表
-                      _buildSelectedDaySection(),
-                    ],
-                  ),
+                    ),
+                    // 浮动按钮
+                    Positioned(
+                      bottom: 70,
+                      right: 20,
+                      child: FloatingActionButton(
+                        onPressed: () => context.go('/add-transaction'),
+                        backgroundColor: const Color(0xFF1976D2), // 更亮的蓝色
+                        foregroundColor: Colors.white,
+                        elevation: 8,
+                        shape: const CircleBorder(), // 明确设置为圆形
+                        child: const Icon(Icons.add, size: 28),
+                      ),
+                    ),
+                  ],
                 ),
         );
       },

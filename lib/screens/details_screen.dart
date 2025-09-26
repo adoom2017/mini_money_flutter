@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -24,12 +25,29 @@ class DetailsScreen extends StatelessWidget {
                 onPressed: () => provider.fetchTransactions(),
               ),
             ),
-            child: SafeArea(
-              child: provider.isLoading
-                  ? const Center(
-                      child: CupertinoActivityIndicator(radius: 12),
-                    )
-                  : _buildTransactionListView(context, provider),
+            child: Stack(
+              children: [
+                SafeArea(
+                  child: provider.isLoading
+                      ? const Center(
+                          child: CupertinoActivityIndicator(radius: 12),
+                        )
+                      : _buildTransactionListView(context, provider),
+                ),
+                // 浮动按钮
+                Positioned(
+                  bottom: 70,
+                  right: 20,
+                  child: FloatingActionButton(
+                    onPressed: () => context.go('/add-transaction'),
+                    backgroundColor: const Color(0xFF1976D2), // 更亮的蓝色
+                    foregroundColor: Colors.white,
+                    elevation: 8,
+                    shape: const CircleBorder(), // 明确设置为圆形
+                    child: const Icon(Icons.add, size: 28),
+                  ),
+                ),
+              ],
             ),
           );
         },

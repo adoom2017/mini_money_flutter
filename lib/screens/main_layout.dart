@@ -1,23 +1,35 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:go_router/go_router.dart';
 
-class MainLayout extends StatelessWidget {
+class MainLayout extends StatefulWidget {
   const MainLayout({required this.child, super.key});
 
   final Widget child;
 
   @override
+  State<MainLayout> createState() => _MainLayoutState();
+}
+
+class _MainLayoutState extends State<MainLayout> {
+  @override
   Widget build(BuildContext context) {
     final currentIndex = _calculateSelectedIndex(context);
-    final shouldShowFab =
-        currentIndex == 0 || currentIndex == 1; // 只在首页(0)和详情页(1)显示
+
+    // 添加日志来追踪刷新原因
+    final location = GoRouterState.of(context).matchedLocation;
+    print(
+        'MainLayout.build() called - currentIndex: $currentIndex, location: $location');
+
+    // 追踪LayoutBuilder的构建
+    print('LayoutBuilder about to build for location: $location');
 
     return LayoutBuilder(
       builder: (context, constraints) {
         // Use NavigationRail for wider screens
         if (constraints.maxWidth > 600) {
-          return Scaffold(
-            body: Row(
+          return CupertinoPageScaffold(
+            child: Row(
               children: [
                 NavigationRail(
                   selectedIndex: currentIndex,
@@ -26,65 +38,65 @@ class MainLayout extends StatelessWidget {
                   labelType: NavigationRailLabelType.all,
                   destinations: const [
                     NavigationRailDestination(
-                        icon: Icon(Icons.home), label: Text('Home')),
+                        icon: Icon(CupertinoIcons.home), label: Text('Home')),
                     NavigationRailDestination(
-                        icon: Icon(Icons.list), label: Text('Details')),
+                        icon: Icon(CupertinoIcons.list_bullet),
+                        label: Text('Details')),
                     NavigationRailDestination(
-                        icon: Icon(Icons.account_balance_wallet),
+                        icon: Icon(CupertinoIcons.creditcard),
                         label: Text('Assets')),
                     NavigationRailDestination(
-                        icon: Icon(Icons.bar_chart), label: Text('Statistics')),
+                        icon: Icon(CupertinoIcons.chart_bar),
+                        label: Text('Statistics')),
                     NavigationRailDestination(
-                        icon: Icon(Icons.settings), label: Text('Settings')),
+                        icon: Icon(CupertinoIcons.settings),
+                        label: Text('Settings')),
                   ],
                 ),
                 const VerticalDivider(thickness: 1, width: 1),
-                Expanded(child: child),
+                Expanded(child: widget.child),
               ],
             ),
-            floatingActionButton: shouldShowFab
-                ? FloatingActionButton(
-                    onPressed: () => context.go('/add-transaction'),
-                    backgroundColor: const Color(0xFF1976D2), // 更亮的蓝色
-                    foregroundColor: Colors.white,
-                    elevation: 8,
-                    shape: const CircleBorder(), // 明确设置为圆形
-                    child: const Icon(Icons.add, size: 28),
-                  )
-                : null,
           );
         }
 
-        // Use BottomNavigationBar for smaller screens
-        return Scaffold(
-          body: child,
-          bottomNavigationBar: BottomNavigationBar(
-            type: BottomNavigationBarType.fixed,
+        // Use CupertinoTabScaffold for smaller screens
+        return CupertinoTabScaffold(
+          tabBar: CupertinoTabBar(
             currentIndex: currentIndex,
             onTap: (index) => _onItemTapped(index, context),
             items: const [
-              BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-              BottomNavigationBarItem(icon: Icon(Icons.list), label: 'Details'),
               BottomNavigationBarItem(
-                  icon: Icon(Icons.account_balance_wallet), label: 'Assets'),
+                icon: Icon(CupertinoIcons.home),
+                label: 'Home',
+              ),
               BottomNavigationBarItem(
-                  icon: Icon(Icons.bar_chart), label: 'Statistics'),
+                icon: Icon(CupertinoIcons.list_bullet),
+                label: 'Details',
+              ),
               BottomNavigationBarItem(
-                  icon: Icon(Icons.settings), label: 'Settings'),
+                icon: Icon(CupertinoIcons.creditcard),
+                label: 'Assets',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(CupertinoIcons.chart_bar),
+                label: 'Statistics',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(CupertinoIcons.settings),
+                label: 'Settings',
+              ),
             ],
           ),
-          floatingActionButton: shouldShowFab
-              ? FloatingActionButton(
-                  onPressed: () => context.go('/add-transaction'),
-                  backgroundColor: const Color(0xFF1976D2), // 更亮的蓝色
-                  foregroundColor: Colors.white,
-                  elevation: 8,
-                  shape: const CircleBorder(), // 明确设置为圆形
-                  child: const Icon(Icons.add, size: 28),
-                )
-              : null,
-          floatingActionButtonLocation:
-              shouldShowFab ? FloatingActionButtonLocation.endFloat : null,
+          tabBuilder: (context, index) {
+            // 只在当前选中的标签页显示内容
+            if (index == currentIndex) {
+              return widget.child;
+            } else {
+              // 其他标签页返回空容器
+              return const SizedBox.shrink();
+            }
+          },
         );
       },
     );
