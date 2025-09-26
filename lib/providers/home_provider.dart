@@ -26,30 +26,56 @@ class HomeProvider with ChangeNotifier {
   DateTime _selectedMonth = DateTime.now();
   DateTime get selectedMonth => _selectedMonth;
 
-  Future<void> fetchData([DateTime? month]) async {
-    _isLoading = true;
-    notifyListeners();
+  // 用于防止竞争条件的请求计数器
+  int _requestCounter = 0;
 
-    _selectedMonth = month ?? _selectedMonth;
+  Future<void> fetchData([DateTime? month]) async {
+    // 增加请求计数器，用于标识当前请求
+    final currentRequest = ++_requestCounter;
+
+    final targetMonth = month ?? _selectedMonth;
+
+    // 如果是相同的月份，避免重复请求
+    if (month != null &&
+        _selectedMonth.year == targetMonth.year &&
+        _selectedMonth.month == targetMonth.month &&
+        !_isLoading) {
+      return;
+    }
+
+    _isLoading = true;
+    _selectedMonth = targetMonth;
+    notifyListeners();
 
     try {
       await Future.wait([
-        _fetchStatistics(),
-        _fetchTransactionsForMonth(),
+        _fetchStatistics(currentRequest),
+        _fetchTransactionsForMonth(currentRequest),
       ]);
+
+      // 只有当这是最新的请求时才更新状态
+      if (currentRequest == _requestCounter) {
+        _isLoading = false;
+        notifyListeners();
+      }
     } catch (e) {
       AppLogger.error('Error fetching home data: $e');
-    } finally {
-      _isLoading = false;
-      notifyListeners();
+      // 只有当这是最新的请求时才更新状态
+      if (currentRequest == _requestCounter) {
+        _isLoading = false;
+        notifyListeners();
+      }
     }
   }
 
-  Future<void> _fetchStatistics() async {
+  Future<void> _fetchStatistics(int requestId) async {
     final response = await _apiService.getStatistics(
       y: _selectedMonth.year,
       m: _selectedMonth.month,
     );
+
+    // 检查请求是否仍然有效
+    if (requestId != _requestCounter) return;
 
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
@@ -63,7 +89,7 @@ class HomeProvider with ChangeNotifier {
     }
   }
 
-  Future<void> _fetchTransactionsForMonth() async {
+  Future<void> _fetchTransactionsForMonth(int requestId) async {
     final monthStr =
         "${_selectedMonth.year}-${_selectedMonth.month.toString().padLeft(2, '0')}";
 
@@ -71,6 +97,9 @@ class HomeProvider with ChangeNotifier {
         'HomeProvider._fetchTransactionsForMonth called with monthStr: $monthStr');
 
     final response = await _apiService.getTransactions(m: monthStr);
+
+    // 检查请求是否仍然有效
+    if (requestId != _requestCounter) return;
 
     AppLogger.info('API response status: ${response.statusCode}');
 

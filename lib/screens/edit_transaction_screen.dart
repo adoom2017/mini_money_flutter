@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/gestures.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../api/api_service.dart';
@@ -327,16 +328,24 @@ class _EditTransactionScreenState extends State<EditTransactionScreen> {
               ),
             ),
             Expanded(
-              child: CupertinoDatePicker(
-                mode: CupertinoDatePickerMode.date,
-                initialDateTime: _selectedDate,
-                maximumDate: DateTime.now(),
-                minimumDate: DateTime(2020),
-                onDateTimeChanged: (date) {
-                  setState(() {
-                    _selectedDate = date;
-                  });
-                },
+              child: ScrollConfiguration(
+                behavior: ScrollConfiguration.of(context).copyWith(
+                  dragDevices: {
+                    PointerDeviceKind.touch,
+                    PointerDeviceKind.mouse,
+                  },
+                ),
+                child: CupertinoDatePicker(
+                  mode: CupertinoDatePickerMode.date,
+                  initialDateTime: _selectedDate,
+                  maximumDate: DateTime.now(),
+                  minimumDate: DateTime(2020),
+                  onDateTimeChanged: (date) {
+                    setState(() {
+                      _selectedDate = date;
+                    });
+                  },
+                ),
               ),
             ),
           ],
