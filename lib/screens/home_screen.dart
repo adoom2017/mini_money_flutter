@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -26,13 +25,9 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    AppLogger.info('HomeScreen initState called');
     _homeProvider = HomeProvider();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      AppLogger.info('HomeScreen postFrameCallback executing');
-      AppLogger.info('HomeScreen got HomeProvider, calling fetchData');
       _homeProvider.fetchData().then((_) {
-        AppLogger.info('HomeScreen fetchData completed');
         _fetchTransactionsForDay(DateTime.now());
       }).catchError((error) {
         AppLogger.error('HomeScreen fetchData failed: $error');

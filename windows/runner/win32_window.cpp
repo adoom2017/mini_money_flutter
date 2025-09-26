@@ -216,6 +216,16 @@ Win32Window::MessageHandler(HWND hwnd,
     case WM_DWMCOLORIZATIONCOLORCHANGED:
       UpdateTheme(hwnd);
       return 0;
+
+    case WM_GETMINMAXINFO: {
+      // Limit window size to 600x1200, prevent resizing
+      MINMAXINFO* minMaxInfo = reinterpret_cast<MINMAXINFO*>(lparam);
+      minMaxInfo->ptMinTrackSize.x = 600;
+      minMaxInfo->ptMinTrackSize.y = 1000;
+      minMaxInfo->ptMaxTrackSize.x = 600;
+      minMaxInfo->ptMaxTrackSize.y = 1000;
+      return 0;
+    }
   }
 
   return DefWindowProc(window_handle_, message, wparam, lparam);

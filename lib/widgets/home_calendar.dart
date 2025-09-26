@@ -71,13 +71,6 @@ class _HomeCalendarState extends State<HomeCalendar> {
 
   @override
   Widget build(BuildContext context) {
-    AppLogger.info(
-        'HomeCalendar build: ${widget.transactions.length} transactions available');
-    for (var t in widget.transactions) {
-      AppLogger.info(
-          'Transaction: ${t.date.toIso8601String()}, amount: ${t.amount}');
-    }
-
     return Padding(
       padding: const EdgeInsets.all(12.0),
       child: TableCalendar<Transaction>(
@@ -87,7 +80,7 @@ class _HomeCalendarState extends State<HomeCalendar> {
         selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
         onDaySelected: _onDaySelected,
         eventLoader: _getEventsForDay,
-        rowHeight: 48, // 增加行高以容纳收入支出文字
+        rowHeight: 50, // 进一步减少行高以避免溢出
         daysOfWeekHeight: 32, // 固定星期标题高度
         headerStyle: const HeaderStyle(
           formatButtonVisible: false,
@@ -104,16 +97,19 @@ class _HomeCalendarState extends State<HomeCalendar> {
           defaultTextStyle: TextStyle(color: CupertinoColors.label),
           todayDecoration: BoxDecoration(
             color: CupertinoColors.systemOrange,
-            shape: BoxShape.circle,
+            shape: BoxShape.rectangle,
+            borderRadius: BorderRadius.all(Radius.circular(8)),
           ),
           selectedDecoration: BoxDecoration(
             color: CupertinoColors.systemBlue,
-            shape: BoxShape.circle,
+            shape: BoxShape.rectangle,
+            borderRadius: BorderRadius.all(Radius.circular(8)),
           ),
-          markersMaxCount: 3, // 增加最大标记数量
+          markersMaxCount: 3,
           markerDecoration: BoxDecoration(
             color: Colors.transparent,
           ),
+          cellMargin: EdgeInsets.all(2),
         ),
         daysOfWeekStyle: const DaysOfWeekStyle(
           weekdayStyle:
@@ -122,6 +118,15 @@ class _HomeCalendarState extends State<HomeCalendar> {
               TextStyle(color: CupertinoColors.placeholderText, fontSize: 12),
         ),
         calendarBuilders: CalendarBuilders(
+          defaultBuilder: (context, day, focusedDay) {
+            return _buildDayCell(day, false, false);
+          },
+          todayBuilder: (context, day, focusedDay) {
+            return _buildDayCell(day, true, false);
+          },
+          selectedBuilder: (context, day, focusedDay) {
+            return _buildDayCell(day, false, true);
+          },
           markerBuilder: (context, day, events) {
             if (events.isNotEmpty) {
               return _buildEventsMarker(day, events);
@@ -146,17 +151,14 @@ class _HomeCalendarState extends State<HomeCalendar> {
     );
   }
 
-  Widget _buildEventsMarker(DateTime day, List events) {
+  Widget _buildDayCell(DateTime day, bool isToday, bool isSelected) {
+    // 获取当天的交易数据
     final dayTransactions = widget.transactions
         .where((t) =>
             t.date.year == day.year &&
             t.date.month == day.month &&
             t.date.day == day.day)
         .toList();
-
-    if (dayTransactions.isEmpty) {
-      return Container();
-    }
 
     double income = dayTransactions
         .where((t) => t.amount > 0)
@@ -166,47 +168,80 @@ class _HomeCalendarState extends State<HomeCalendar> {
         .where((t) => t.amount < 0)
         .fold(0.0, (sum, t) => sum - t.amount);
 
-    return Positioned(
-      bottom: 4,
-      left: 4,
-      right: 4,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+    Color backgroundColor = const Color.fromRGBO(247, 247, 247, 1.0);
+    Color textColor = CupertinoColors.label;
+
+    if (isSelected) {
+      backgroundColor = CupertinoColors.systemBlue;
+      textColor = CupertinoColors.white;
+    } else if (isToday) {
+      backgroundColor = CupertinoColors.systemOrange;
+      textColor = CupertinoColors.white;
+    }
+
+    return Container(
+      width: 44, // 固定宽度
+      height: 44, // 固定高度
+      margin: const EdgeInsets.all(0.5),
+      decoration: BoxDecoration(
+        color: backgroundColor,
+        borderRadius: BorderRadius.circular(4),
+        border: dayTransactions.isNotEmpty
+            ? Border.all(
+                color: CupertinoColors.separator.withOpacity(0.4),
+                width: 1,
+              )
+            : Border.all(
+                color: CupertinoColors.separator.withOpacity(0.1),
+                width: 0.5,
+              ),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          if (income > 0)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 1),
-              decoration: BoxDecoration(
-                color: CupertinoColors.systemGreen,
-                borderRadius: BorderRadius.circular(2),
-              ),
-              child: Text(
-                '+${income.toInt()}',
-                style: const TextStyle(
-                  color: CupertinoColors.white,
-                  fontSize: 8,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
+          Text(
+            '${day.day}',
+            style: TextStyle(
+              color: textColor,
+              fontSize: 13,
+              fontWeight: dayTransactions.isNotEmpty
+                  ? FontWeight.w600
+                  : FontWeight.w500,
             ),
-          if (expense > 0)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 1),
-              decoration: BoxDecoration(
-                color: CupertinoColors.systemRed,
-                borderRadius: BorderRadius.circular(2),
-              ),
-              child: Text(
+          ),
+          if (dayTransactions.isNotEmpty) ...[
+            const SizedBox(height: 1),
+            if (expense > 0)
+              Text(
                 '-${expense.toInt()}',
-                style: const TextStyle(
-                  color: CupertinoColors.white,
+                style: TextStyle(
+                  color: isSelected || isToday
+                      ? CupertinoColors.white.withOpacity(0.9)
+                      : CupertinoColors.systemRed,
                   fontSize: 8,
-                  fontWeight: FontWeight.w600,
+                  fontWeight: FontWeight.w700,
                 ),
               ),
-            ),
+            if (income > 0)
+              Text(
+                '+${income.toInt()}',
+                style: TextStyle(
+                  color: isSelected || isToday
+                      ? CupertinoColors.white.withOpacity(0.9)
+                      : CupertinoColors.systemGreen,
+                  fontSize: 8,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+          ],
         ],
       ),
     );
+  }
+
+  Widget _buildEventsMarker(DateTime day, List events) {
+    // 这个方法现在主要用于TableCalendar的内部逻辑
+    // 实际的显示由_buildDayCell处理
+    return Container();
   }
 }

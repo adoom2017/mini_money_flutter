@@ -25,8 +25,19 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
   project.set_dart_entrypoint_arguments(std::move(command_line_arguments));
 
   FlutterWindow window(project);
-  Win32Window::Point origin(10, 10);
-  Win32Window::Size size(1280, 720);
+  
+  // Get screen dimensions to center the window
+  int screenWidth = GetSystemMetrics(SM_CXSCREEN);
+  int screenHeight = GetSystemMetrics(SM_CYSCREEN);
+  
+  Win32Window::Size size(600, 1000);
+  
+  // Calculate center position
+  int centerX = (screenWidth - size.width) / 2;
+  int centerY = (screenHeight - size.height) / 2;
+  
+  Win32Window::Point origin(centerX, centerY);
+  
   if (!window.Create(L"frontend_flutter", origin, size)) {
     return EXIT_FAILURE;
   }

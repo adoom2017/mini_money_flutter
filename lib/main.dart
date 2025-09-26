@@ -17,6 +17,7 @@ import 'package:mini_money_flutter/providers/transaction_provider.dart';
 import 'package:mini_money_flutter/providers/asset_provider.dart';
 import 'package:mini_money_flutter/providers/statistics_provider.dart';
 import 'package:mini_money_flutter/providers/user_provider.dart';
+import 'package:mini_money_flutter/api/api_service.dart';
 
 void main() {
   runApp(
@@ -40,6 +41,11 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final authProvider = Provider.of<AuthProvider>(context);
+
+    // 设置401错误处理回调
+    ApiService.setUnauthorizedCallback(() {
+      authProvider.logout();
+    });
 
     final router = GoRouter(
       refreshListenable: authProvider,
@@ -103,7 +109,7 @@ class MyApp extends StatelessWidget {
         primaryColor: CupertinoColors.systemBlue,
         brightness: Brightness.light,
       ),
-      localizationsDelegates: [
+      localizationsDelegates: const [
         GlobalMaterialLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,

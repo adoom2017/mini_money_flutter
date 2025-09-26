@@ -6,6 +6,14 @@ import '../utils/app_logger.dart';
 class ApiService {
   final String _baseUrl = 'http://127.0.0.1:8080/api';
 
+  // 401错误回调函数
+  static void Function()? _onUnauthorized;
+
+  // 设置401错误处理回调
+  static void setUnauthorizedCallback(void Function() callback) {
+    _onUnauthorized = callback;
+  }
+
   Future<String?> _getToken() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getString('token');
@@ -61,6 +69,11 @@ class ApiService {
         body: response.body,
         contentLength: response.contentLength,
       );
+
+      // 检查是否为401未授权错误
+      if (response.statusCode == 401 && _onUnauthorized != null) {
+        _onUnauthorized!();
+      }
 
       return response;
     } catch (e, stackTrace) {
