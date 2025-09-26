@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../api/api_service.dart';
 import '../models/asset.dart';
 import '../models/asset_category.dart';
+import '../utils/app_logger.dart';
 
 class AssetProvider with ChangeNotifier {
   final ApiService _apiService = ApiService();
@@ -33,7 +34,7 @@ class AssetProvider with ChangeNotifier {
         _fetchCategories(),
       ]);
     } catch (e) {
-      print('Error fetching asset data: $e');
+      AppLogger.error('Error fetching asset data: $e');
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -65,10 +66,12 @@ class AssetProvider with ChangeNotifier {
     }
     return false;
   }
-  
-  Future<bool> createAssetRecord(String assetId, DateTime date, double amount) async {
+
+  Future<bool> createAssetRecord(
+      String assetId, DateTime date, double amount) async {
     final dateStr = date.toIso8601String();
-    final response = await _apiService.createAssetRecord(assetId, dateStr, amount);
+    final response =
+        await _apiService.createAssetRecord(assetId, dateStr, amount);
     if (response.statusCode == 200) {
       await _fetchAssets(); // Refresh asset list
       notifyListeners();

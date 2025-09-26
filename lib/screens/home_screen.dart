@@ -148,7 +148,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildSelectedDaySection() {
     if (_selectedDayTransactions.isEmpty) {
       return Container(
-        margin: const EdgeInsets.symmetric(horizontal: 16),
+        margin: const EdgeInsets.symmetric(horizontal: 28), // 调整对齐 16 + 12 = 28
         decoration: BoxDecoration(
           color: CupertinoColors.systemBackground,
           borderRadius: BorderRadius.circular(12),
@@ -181,7 +181,7 @@ class _HomeScreenState extends State<HomeScreen> {
         .fold(0.0, (sum, t) => sum + t.amount);
 
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16),
+      margin: const EdgeInsets.symmetric(horizontal: 28), // 调整对齐 16 + 12 = 28
       decoration: BoxDecoration(
         color: CupertinoColors.systemBackground,
         borderRadius: BorderRadius.circular(12),

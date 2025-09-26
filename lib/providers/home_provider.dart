@@ -38,8 +38,7 @@ class HomeProvider with ChangeNotifier {
         _fetchTransactionsForMonth(),
       ]);
     } catch (e) {
-      // Handle error, maybe set an error state
-      print(e);
+      AppLogger.error('Error fetching home data: $e');
     } finally {
       _isLoading = false;
       notifyListeners();

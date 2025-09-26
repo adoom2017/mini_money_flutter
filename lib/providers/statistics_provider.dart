@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import '../api/api_service.dart';
 import '../models/statistics_summary.dart';
+import '../utils/app_logger.dart';
 
 class StatisticsProvider with ChangeNotifier {
   final ApiService _apiService = ApiService();
@@ -51,7 +52,7 @@ class StatisticsProvider with ChangeNotifier {
         _incomeStats = [];
       }
     } catch (e) {
-      print('Error fetching statistics: $e');
+      AppLogger.error('Error fetching statistics: $e');
       _summary = null;
       _expenseStats = [];
       _incomeStats = [];

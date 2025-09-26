@@ -7,8 +7,8 @@ class AppLogger {
       errorMethodCount: 5, // 错误时显示5层调用堆栈
       lineLength: 80, // 每行字符数限制
       colors: true, // 启用颜色
-      printEmojis: true, // 启用表情符号
-      printTime: true, // 显示时间戳
+      printEmojis: false, // 启用表情符号
+      dateTimeFormat: DateTimeFormat.onlyTimeAndSinceStart, // 显示时间戳
     ),
   );
 
@@ -45,7 +45,7 @@ class AppLogger {
     String? body,
   }) {
     final buffer = StringBuffer();
-    buffer.writeln('🌐 HTTP 请求');
+    buffer.writeln('HTTP 请求');
     buffer.writeln('方法: $method');
     buffer.writeln('URL: $url');
 
@@ -76,7 +76,7 @@ class AppLogger {
     int? contentLength,
   }) {
     final buffer = StringBuffer();
-    buffer.writeln('📥 HTTP 响应');
+    buffer.writeln('HTTP 响应');
     buffer.writeln('状态码: $statusCode');
 
     if (contentLength != null) {
@@ -112,7 +112,7 @@ class AppLogger {
     String? method,
   }) {
     final buffer = StringBuffer();
-    buffer.writeln('💥 HTTP 请求异常');
+    buffer.writeln('HTTP 请求异常');
     if (method != null && url != null) {
       buffer.writeln('请求: $method $url');
     }

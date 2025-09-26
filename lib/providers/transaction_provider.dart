@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import '../api/api_service.dart';
 import '../models/transaction.dart';
+import '../utils/app_logger.dart';
 
 class TransactionProvider with ChangeNotifier {
   final ApiService _apiService = ApiService();
@@ -28,7 +29,7 @@ class TransactionProvider with ChangeNotifier {
         _transactions.sort((a, b) => b.date.compareTo(a.date));
       }
     } catch (e) {
-      print('Error fetching transactions: $e');
+      AppLogger.error('Error fetching transactions: $e');
     } finally {
       _isLoading = false;
       notifyListeners();
