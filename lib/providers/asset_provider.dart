@@ -59,7 +59,7 @@ class AssetProvider with ChangeNotifier {
 
   Future<bool> createAsset(String name, String categoryId) async {
     final response = await _apiService.createAsset(name, categoryId);
-    if (response.statusCode == 200) {
+    if (response.statusCode == 200 || response.statusCode == 201) {
       await _fetchAssets(); // Refresh asset list
       notifyListeners();
       return true;
@@ -72,7 +72,7 @@ class AssetProvider with ChangeNotifier {
     final dateStr = date.toIso8601String();
     final response =
         await _apiService.createAssetRecord(assetId, dateStr, amount);
-    if (response.statusCode == 200) {
+    if (response.statusCode == 200 || response.statusCode == 201) {
       await _fetchAssets(); // Refresh asset list
       notifyListeners();
       return true;

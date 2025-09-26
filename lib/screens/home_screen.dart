@@ -9,6 +9,7 @@ import '../models/transaction.dart';
 import '../api/api_service.dart';
 import 'package:intl/intl.dart';
 import '../utils/app_logger.dart';
+import '../utils/category_utils.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -23,6 +24,7 @@ class _HomeScreenState extends State<HomeScreen> {
   DateTime _selectedDate = DateTime.now();
   HomeProvider? _homeProvider;
   bool _isInitialized = false;
+  bool _isLoadingTransactions = false;
 
   @override
   void initState() {
@@ -48,28 +50,42 @@ class _HomeScreenState extends State<HomeScreen> {
       try {
         await _homeProvider!.fetchData();
         if (mounted) {
-          // 初始化时清空选中日期的交易记录，让用户手动选择
-          // 不自动获取今日交易，避免跨月份问题
-          setState(() {
-            _selectedDayTransactions = [];
-            // 使用 Provider 中当前选择月份的今天（如果存在）
-            final currentMonth = _homeProvider!.selectedMonth;
-            final today = DateTime.now();
+          // 使用 Provider 中当前选择月份的今天（如果存在）
+          final currentMonth = _homeProvider!.selectedMonth;
+          final today = DateTime.now();
 
-            // 如果当前选择的月份就是本月，则设置为今天，否则设置为该月第一天
-            if (currentMonth.year == today.year &&
-                currentMonth.month == today.month) {
-              _selectedDate = today;
-            } else {
-              _selectedDate =
-                  DateTime(currentMonth.year, currentMonth.month, 1);
-            }
-          });
+          // 如果当前选择的月份就是本月，则设置为今天，否则设置为该月第一天
+          if (currentMonth.year == today.year &&
+              currentMonth.month == today.month) {
+            _selectedDate = today;
+          } else {
+            _selectedDate = DateTime(currentMonth.year, currentMonth.month, 1);
+          }
+
+          // 自动获取选中日期的交易数据
+          await _fetchTransactionsForDay(_selectedDate);
         }
       } catch (error) {
         AppLogger.error('HomeScreen fetchData failed: $error');
       }
     }
+  }
+
+  /// 智能选择新月份中的日期
+  /// 优先选择当前选中的日期，如果新月份没有该日期，则选择该月最后一天
+  DateTime _getSmartSelectedDate(DateTime targetMonth) {
+    final currentDay = _selectedDate.day;
+
+    // 获取目标月份的最后一天
+    final lastDayOfMonth =
+        DateTime(targetMonth.year, targetMonth.month + 1, 0).day;
+
+    // 如果当前选中的日期在目标月份中存在，则使用该日期
+    // 否则使用目标月份的最后一天
+    final selectedDay =
+        currentDay <= lastDayOfMonth ? currentDay : lastDayOfMonth;
+
+    return DateTime(targetMonth.year, targetMonth.month, selectedDay);
   }
 
   Widget _buildMonthSelector(HomeProvider provider) {
@@ -93,14 +109,16 @@ class _HomeScreenState extends State<HomeScreen> {
                 provider.selectedMonth.month - 1,
               );
               provider.fetchData(previousMonth);
-              // 清空选中日期的交易记录，让用户重新选择
+
+              // 智能选择新月份中的日期
+              final newSelectedDate = _getSmartSelectedDate(previousMonth);
+
               setState(() {
                 _selectedDayTransactions = [];
-                // 重置选中日期为切换后月份的第一天
-                _selectedDate =
-                    DateTime(previousMonth.year, previousMonth.month, 1);
+                _selectedDate = newSelectedDate;
               });
-              // 自动获取第一天的交易记录
+
+              // 自动获取选中日期的交易记录
               _fetchTransactionsForDay(_selectedDate);
             },
           ),
@@ -129,16 +147,17 @@ class _HomeScreenState extends State<HomeScreen> {
                                 onPressed: () {
                                   Navigator.pop(context);
                                   provider.fetchData(tempPickedDate);
-                                  // 清空选中日期的交易记录，让用户重新选择
+
+                                  // 智能选择新月份中的日期
+                                  final newSelectedDate =
+                                      _getSmartSelectedDate(tempPickedDate);
+
                                   setState(() {
                                     _selectedDayTransactions = [];
-                                    // 重置选中日期为选择月份的第一天
-                                    _selectedDate = DateTime(
-                                        tempPickedDate.year,
-                                        tempPickedDate.month,
-                                        1);
+                                    _selectedDate = newSelectedDate;
                                   });
-                                  // 自动获取第一天的交易记录
+
+                                  // 自动获取选中日期的交易记录
                                   _fetchTransactionsForDay(_selectedDate);
                                 },
                               ),
@@ -202,13 +221,16 @@ class _HomeScreenState extends State<HomeScreen> {
               if (nextMonth.isBefore(DateTime.now()) ||
                   nextMonth.month == DateTime.now().month) {
                 provider.fetchData(nextMonth);
-                // 清空选中日期的交易记录，让用户重新选择
+
+                // 智能选择新月份中的日期
+                final newSelectedDate = _getSmartSelectedDate(nextMonth);
+
                 setState(() {
                   _selectedDayTransactions = [];
-                  // 重置选中日期为切换后月份的第一天
-                  _selectedDate = DateTime(nextMonth.year, nextMonth.month, 1);
+                  _selectedDate = newSelectedDate;
                 });
-                // 自动获取第一天的交易记录
+
+                // 自动获取选中日期的交易记录
                 _fetchTransactionsForDay(_selectedDate);
               }
             },
@@ -219,6 +241,29 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildSelectedDaySection() {
+    if (_isLoadingTransactions) {
+      return Expanded(
+        child: Container(
+          margin: const EdgeInsets.symmetric(horizontal: 16),
+          decoration: BoxDecoration(
+            color: CupertinoColors.systemBackground,
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: [
+              BoxShadow(
+                color: CupertinoColors.separator.withOpacity(0.3),
+                spreadRadius: 0,
+                blurRadius: 8,
+                offset: const Offset(0, 1),
+              ),
+            ],
+          ),
+          child: const Center(
+            child: CupertinoActivityIndicator(),
+          ),
+        ),
+      );
+    }
+
     if (_selectedDayTransactions.isEmpty) {
       return Expanded(
         child: Container(
@@ -340,8 +385,8 @@ class _HomeScreenState extends State<HomeScreen> {
               color: CupertinoColors.systemOrange.withOpacity(0.2),
               shape: BoxShape.circle,
             ),
-            child: const Icon(
-              CupertinoIcons.square_fill_on_circle_fill,
+            child: Icon(
+              CategoryUtils.getCategoryIcon(transaction.categoryKey),
               color: CupertinoColors.systemOrange,
               size: 16,
             ),
@@ -353,7 +398,7 @@ class _HomeScreenState extends State<HomeScreen> {
               children: [
                 Text(
                   transaction.description.isEmpty
-                      ? transaction.categoryKey
+                      ? CategoryUtils.getCategoryName(transaction.categoryKey)
                       : transaction.description,
                   style: const TextStyle(
                     fontSize: 15,
@@ -363,7 +408,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  '${DateFormat('HH:mm').format(transaction.date)} • ${transaction.categoryKey}',
+                  '${DateFormat('HH:mm').format(transaction.date)} • ${CategoryUtils.getCategoryName(transaction.categoryKey)}',
                   style: const TextStyle(
                     fontSize: 12,
                     color: CupertinoColors.placeholderText,
@@ -388,28 +433,43 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _fetchTransactionsForDay(DateTime day) async {
-    // 获取 Provider 中当前选择的月份，确保使用正确的年月
-    final currentSelectedMonth = _homeProvider?.selectedMonth ?? DateTime.now();
+    setState(() {
+      _isLoadingTransactions = true;
+    });
 
-    // 使用 Provider 中的年月，结合点击的日期天数
-    final correctedDate = DateTime(
-      currentSelectedMonth.year,
-      currentSelectedMonth.month,
-      day.day,
-    );
+    try {
+      // 获取 Provider 中当前选择的月份，确保使用正确的年月
+      final currentSelectedMonth =
+          _homeProvider?.selectedMonth ?? DateTime.now();
 
-    final dateStr = DateFormat('yyyy-MM-dd').format(correctedDate);
-    AppLogger.info(
-        'Fetching transactions for corrected date: $dateStr (from day: ${day.day}, selected month: ${DateFormat('yyyy-MM').format(currentSelectedMonth)})');
+      // 使用 Provider 中的年月，结合点击的日期天数
+      final correctedDate = DateTime(
+        currentSelectedMonth.year,
+        currentSelectedMonth.month,
+        day.day,
+      );
 
-    final response = await _apiService.getTransactions(d: dateStr);
-    if (response.statusCode == 200 && mounted) {
-      final data = jsonDecode(response.body) as List;
-      setState(() {
-        _selectedDate = correctedDate;
-        _selectedDayTransactions =
-            data.map((item) => Transaction.fromJson(item)).toList();
-      });
+      final dateStr = DateFormat('yyyy-MM-dd').format(correctedDate);
+      AppLogger.info(
+          'Fetching transactions for corrected date: $dateStr (from day: ${day.day}, selected month: ${DateFormat('yyyy-MM').format(currentSelectedMonth)})');
+
+      final response = await _apiService.getTransactions(d: dateStr);
+      if (response.statusCode == 200 && mounted) {
+        final data = jsonDecode(response.body) as List;
+        setState(() {
+          _selectedDate = correctedDate;
+          _selectedDayTransactions =
+              data.map((item) => Transaction.fromJson(item)).toList();
+        });
+      }
+    } catch (error) {
+      AppLogger.error('Failed to fetch transactions for day: $error');
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoadingTransactions = false;
+        });
+      }
     }
   }
 
@@ -422,14 +482,6 @@ class _HomeScreenState extends State<HomeScreen> {
           navigationBar: CupertinoNavigationBar(
             backgroundColor: CupertinoColors.systemBackground,
             border: null,
-            leading: CupertinoButton(
-              padding: EdgeInsets.zero,
-              child: const Icon(
-                CupertinoIcons.back,
-                color: CupertinoColors.systemBlue,
-              ),
-              onPressed: () {},
-            ),
             middle: const Text(
               '默认账本',
               style: TextStyle(
@@ -466,9 +518,10 @@ class _HomeScreenState extends State<HomeScreen> {
                     children: [
                       // 月份选择器
                       _buildMonthSelector(provider),
-                      // 日历视图 - 固定高度
+                      // 日历视图 - 动态高度
                       Container(
-                        height: 340, // 减少日历高度，避免溢出
+                        height: CustomCalendar.calculateHeight(
+                            provider.selectedMonth),
                         margin: const EdgeInsets.symmetric(horizontal: 16),
                         decoration: BoxDecoration(
                           color: CupertinoColors.systemBackground,

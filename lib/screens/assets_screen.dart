@@ -1,8 +1,9 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:provider/provider.dart';
 import '../providers/asset_provider.dart';
 import '../models/asset.dart';
 import 'package:intl/intl.dart';
+import 'asset_detail_screen.dart';
 
 class AssetsScreen extends StatelessWidget {
   const AssetsScreen({super.key});
@@ -13,22 +14,39 @@ class AssetsScreen extends StatelessWidget {
       create: (_) => AssetProvider(),
       child: Consumer<AssetProvider>(
         builder: (context, provider, child) {
-          return Scaffold(
-            appBar: AppBar(
-              title: const Text('Assets'),
-              actions: [
-                IconButton(
-                  icon: const Icon(Icons.refresh),
-                  onPressed: () => provider.fetchData(),
-                )
-              ],
+          return CupertinoPageScaffold(
+            navigationBar: CupertinoNavigationBar(
+              middle: const Text('Assets'),
+              trailing: CupertinoButton(
+                padding: EdgeInsets.zero,
+                child: const Icon(CupertinoIcons.refresh),
+                onPressed: () => provider.fetchData(),
+              ),
             ),
-            body: provider.isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : _buildAssetList(context, provider),
-            floatingActionButton: FloatingActionButton(
-              onPressed: () => _showAddAssetDialog(context, provider),
-              child: const Icon(Icons.add),
+            child: SafeArea(
+              child: provider.isLoading
+                  ? const Center(
+                      child: CupertinoActivityIndicator(radius: 12),
+                    )
+                  : Stack(
+                      children: [
+                        _buildAssetList(context, provider),
+                        Positioned(
+                          bottom: 20,
+                          right: 20,
+                          child: CupertinoButton.filled(
+                            padding: const EdgeInsets.all(16),
+                            borderRadius: BorderRadius.circular(30),
+                            child: const Icon(
+                              CupertinoIcons.add,
+                              color: CupertinoColors.white,
+                            ),
+                            onPressed: () =>
+                                _showAddAssetDialog(context, provider),
+                          ),
+                        ),
+                      ],
+                    ),
             ),
           );
         },
@@ -38,7 +56,15 @@ class AssetsScreen extends StatelessWidget {
 
   Widget _buildAssetList(BuildContext context, AssetProvider provider) {
     if (provider.assets.isEmpty && !provider.isLoading) {
-      return const Center(child: Text('No assets yet. Tap + to add one!'));
+      return const Center(
+        child: Text(
+          'No assets yet. Tap + to add one!',
+          style: TextStyle(
+            fontSize: 16,
+            color: CupertinoColors.placeholderText,
+          ),
+        ),
+      );
     }
     return ListView(
       padding: const EdgeInsets.fromLTRB(8, 8, 8, 80), // Padding for FAB
@@ -52,40 +78,75 @@ class AssetsScreen extends StatelessWidget {
   }
 
   Widget _buildSummaryCard(BuildContext context, AssetProvider provider) {
-    final currencyFormat = NumberFormat.currency(symbol: '¥');
-    return Card(
-      elevation: 4,
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            Text('Net Worth', style: Theme.of(context).textTheme.titleMedium),
-            Text(currencyFormat.format(provider.netWorth),
-                style: Theme.of(context).textTheme.headlineSmall),
-            const SizedBox(height: 12),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                Column(
-                  children: [
-                    const Text('Total Assets'),
-                    Text(currencyFormat.format(provider.totalAssets),
-                        style: const TextStyle(
-                            color: Colors.green, fontWeight: FontWeight.bold)),
-                  ],
-                ),
-                Column(
-                  children: [
-                    const Text('Total Liabilities'),
-                    Text(currencyFormat.format(provider.totalLiabilities),
-                        style: const TextStyle(
-                            color: Colors.red, fontWeight: FontWeight.bold)),
-                  ],
-                ),
-              ],
-            ),
-          ],
+    return Container(
+      margin: const EdgeInsets.all(8),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: CupertinoColors.systemBackground,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: CupertinoColors.separator,
+          width: 0.5,
         ),
+      ),
+      child: Column(
+        children: [
+          const Text(
+            'Net Worth',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w500,
+              color: CupertinoColors.label,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            NumberFormat.currency(symbol: '¥').format(provider.netWorth),
+            style: const TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: CupertinoColors.label,
+            ),
+          ),
+          const SizedBox(height: 16),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              Column(
+                children: [
+                  const Text(
+                    'Assets',
+                    style: TextStyle(color: CupertinoColors.placeholderText),
+                  ),
+                  Text(
+                    NumberFormat.currency(symbol: '¥')
+                        .format(provider.totalAssets),
+                    style: const TextStyle(
+                      color: CupertinoColors.systemGreen,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+              Column(
+                children: [
+                  const Text(
+                    'Liabilities',
+                    style: TextStyle(color: CupertinoColors.placeholderText),
+                  ),
+                  Text(
+                    NumberFormat.currency(symbol: '¥')
+                        .format(provider.totalLiabilities),
+                    style: const TextStyle(
+                      color: CupertinoColors.systemRed,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
@@ -93,70 +154,129 @@ class AssetsScreen extends StatelessWidget {
   Widget _buildAssetTile(
       BuildContext context, AssetProvider provider, Asset asset) {
     final category = provider.getCategoryById(asset.categoryId);
-    final currencyFormat = NumberFormat.currency(symbol: '¥');
-    return Card(
-      child: ListTile(
-        leading:
-            Text(category?.icon ?? '❓', style: const TextStyle(fontSize: 24)),
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: CupertinoColors.systemBackground,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: CupertinoColors.separator,
+          width: 0.5,
+        ),
+      ),
+      child: CupertinoListTile(
         title: Text(asset.name),
-        subtitle: Text(category?.name ?? 'Uncategorized'),
-        trailing: Text(currencyFormat.format(asset.latestAmount)),
-        onTap: () => _showAddRecordDialog(context, provider, asset),
+        subtitle: Text(asset.category),
+        onTap: () {
+          Navigator.of(context).push(
+            CupertinoPageRoute(
+              builder: (context) => AssetDetailScreen(asset: asset),
+            ),
+          );
+        },
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              NumberFormat.currency(symbol: '¥').format(asset.latestAmount),
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: category?.type == 'asset'
+                    ? CupertinoColors.systemGreen
+                    : CupertinoColors.systemRed,
+              ),
+            ),
+            const SizedBox(width: 8),
+            CupertinoButton(
+              padding: EdgeInsets.zero,
+              minSize: 0,
+              child: const Icon(CupertinoIcons.add_circled),
+              onPressed: () => _showAddRecordDialog(context, provider, asset),
+            ),
+          ],
+        ),
       ),
     );
   }
 
   void _showAddAssetDialog(BuildContext context, AssetProvider provider) {
-    final formKey = GlobalKey<FormState>();
-    String name = '';
-    String? selectedCategoryId;
+    String assetName = '';
+    String selectedCategoryId = '';
 
-    showDialog(
+    showCupertinoDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Add New Asset'),
-        content: Form(
-          key: formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextFormField(
-                decoration: const InputDecoration(labelText: 'Asset Name'),
-                validator: (value) =>
-                    value!.isEmpty ? 'Please enter a name.' : null,
-                onSaved: (value) => name = value!,
+      builder: (context) => CupertinoAlertDialog(
+        title: const Text('Add Asset'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(height: 16),
+            CupertinoTextField(
+              placeholder: 'Asset Name',
+              onChanged: (value) => assetName = value,
+            ),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                border: Border.all(color: CupertinoColors.separator),
+                borderRadius: BorderRadius.circular(8),
               ),
-              DropdownButtonFormField<String>(
-                decoration: const InputDecoration(labelText: 'Category'),
-                items: provider.categories
-                    .map((cat) =>
-                        DropdownMenuItem(value: cat.id, child: Text(cat.name)))
-                    .toList(),
-                onChanged: (value) => selectedCategoryId = value,
-                validator: (value) =>
-                    value == null ? 'Please select a category.' : null,
+              child: CupertinoButton(
+                padding: EdgeInsets.zero,
+                child: Text(
+                  selectedCategoryId.isEmpty
+                      ? 'Select Category'
+                      : 'Category Selected',
+                  style: TextStyle(
+                    color: selectedCategoryId.isEmpty
+                        ? CupertinoColors.placeholderText
+                        : CupertinoColors.label,
+                  ),
+                ),
+                onPressed: () {
+                  // Show category picker
+                  showCupertinoModalPopup(
+                    context: context,
+                    builder: (context) => CupertinoActionSheet(
+                      title: const Text('Select Category'),
+                      actions: provider.categories
+                          .map((category) => CupertinoActionSheetAction(
+                                child: Text(category.name),
+                                onPressed: () {
+                                  selectedCategoryId = category.id.toString();
+                                  Navigator.of(context).pop();
+                                },
+                              ))
+                          .toList(),
+                      cancelButton: CupertinoActionSheetAction(
+                        child: const Text('Cancel'),
+                        onPressed: () => Navigator.of(context).pop(),
+                      ),
+                    ),
+                  );
+                },
               ),
-            ],
-          ),
+            ),
+          ],
         ),
         actions: [
-          TextButton(
-              onPressed: () => Navigator.of(ctx).pop(),
-              child: const Text('Cancel')),
-          ElevatedButton(
+          CupertinoDialogAction(
+            child: const Text('Cancel'),
+            onPressed: () => Navigator.of(context).pop(),
+          ),
+          CupertinoDialogAction(
+            child: const Text('Add'),
             onPressed: () async {
-              if (formKey.currentState!.validate()) {
-                formKey.currentState!.save();
+              if (assetName.isNotEmpty && selectedCategoryId.isNotEmpty) {
+                Navigator.of(context).pop();
                 final success =
-                    await provider.createAsset(name, selectedCategoryId!);
-                Navigator.of(ctx).pop();
+                    await provider.createAsset(assetName, selectedCategoryId);
                 if (!success && context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Failed to add asset.')));
+                  _showErrorDialog(context, 'Failed to add asset.');
                 }
               }
             },
-            child: const Text('Add'),
           ),
         ],
       ),
@@ -165,43 +285,59 @@ class AssetsScreen extends StatelessWidget {
 
   void _showAddRecordDialog(
       BuildContext context, AssetProvider provider, Asset asset) {
-    final formKey = GlobalKey<FormState>();
-    double amount = asset.latestAmount;
-    DateTime selectedDate = DateTime.now();
+    String amount = '';
 
-    showDialog(
+    showCupertinoDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
+      builder: (context) => CupertinoAlertDialog(
         title: Text('Add Record for ${asset.name}'),
-        content: Form(
-          key: formKey,
-          child: TextFormField(
-            decoration: const InputDecoration(labelText: 'Amount'),
-            initialValue: amount.toString(),
-            keyboardType: TextInputType.number,
-            validator: (value) =>
-                value!.isEmpty ? 'Please enter an amount.' : null,
-            onSaved: (value) => amount = double.parse(value!),
-          ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(height: 16),
+            CupertinoTextField(
+              placeholder: 'Amount',
+              keyboardType: TextInputType.number,
+              onChanged: (value) => amount = value,
+            ),
+          ],
         ),
         actions: [
-          TextButton(
-              onPressed: () => Navigator.of(ctx).pop(),
-              child: const Text('Cancel')),
-          ElevatedButton(
+          CupertinoDialogAction(
+            child: const Text('Cancel'),
+            onPressed: () => Navigator.of(context).pop(),
+          ),
+          CupertinoDialogAction(
+            child: const Text('Add'),
             onPressed: () async {
-              if (formKey.currentState!.validate()) {
-                formKey.currentState!.save();
+              if (amount.isNotEmpty) {
+                Navigator.of(context).pop();
                 final success = await provider.createAssetRecord(
-                    asset.id, selectedDate, amount);
-                Navigator.of(ctx).pop();
+                  asset.id.toString(),
+                  DateTime.now(),
+                  double.tryParse(amount) ?? 0.0,
+                );
                 if (!success && context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Failed to add record.')));
+                  _showErrorDialog(context, 'Failed to add record.');
                 }
               }
             },
-            child: const Text('Save'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showErrorDialog(BuildContext context, String message) {
+    showCupertinoDialog(
+      context: context,
+      builder: (context) => CupertinoAlertDialog(
+        title: const Text('Error'),
+        content: Text(message),
+        actions: [
+          CupertinoDialogAction(
+            child: const Text('OK'),
+            onPressed: () => Navigator.of(context).pop(),
           ),
         ],
       ),

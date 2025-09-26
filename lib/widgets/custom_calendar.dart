@@ -1,5 +1,4 @@
 import 'package:flutter/cupertino.dart';
-import 'package:intl/intl.dart';
 import '../models/transaction.dart';
 
 class CustomCalendar extends StatelessWidget {
@@ -16,37 +15,69 @@ class CustomCalendar extends StatelessWidget {
     this.selectedDay,
   });
 
+  // 计算日历所需的总高度
+  static double calculateHeight(DateTime focusedMonth) {
+    const double padding = 24; // 容器内边距 12 * 2
+    const double headerSpacing = 12; // 标题下方间距
+    const double weekdayHeaderHeight = 28; // 星期标题高度（增加缓冲）
+    const double weekdaySpacing = 6; // 星期标题下方间距
+    const double cellHeight = 47; // 每个日期单元格高度（增加缓冲）
+
+    // 计算需要多少行 - 使用与_buildCalendarGrid相同的逻辑
+    final firstDay = DateTime(focusedMonth.year, focusedMonth.month, 1);
+    final startDate = firstDay.subtract(Duration(days: firstDay.weekday % 7));
+
+    int weekCount = 0;
+    DateTime currentDate = startDate;
+
+    while (true) {
+      // 检查这一行是否包含当前月份的任何一天
+      DateTime weekStartDate = currentDate;
+      bool hasCurrentMonthDay = false;
+      for (int day = 0; day < 7; day++) {
+        if (weekStartDate.add(Duration(days: day)).month ==
+            focusedMonth.month) {
+          hasCurrentMonthDay = true;
+          break;
+        }
+      }
+
+      // 如果这一行不包含当前月份的任何一天，且我们至少已经有了一行，则停止
+      if (!hasCurrentMonthDay && weekCount > 0) {
+        break;
+      }
+
+      weekCount++;
+      currentDate = currentDate.add(const Duration(days: 7));
+
+      // 安全保护：防止无限循环，最多6行
+      if (weekCount >= 6) {
+        break;
+      }
+    }
+
+    final gridHeight = weekCount * cellHeight;
+    const double extraBuffer = 8; // 额外的缓冲空间
+
+    return padding +
+        headerSpacing +
+        weekdayHeaderHeight +
+        weekdaySpacing +
+        gridHeight +
+        extraBuffer;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(12),
       child: Column(
         children: [
-          _buildHeader(),
-          const SizedBox(height: 12),
           _buildWeekdayHeader(),
           const SizedBox(height: 6),
-          Expanded(
-            child: _buildCalendarGrid(),
-          ),
+          _buildCalendarGrid(),
         ],
       ),
-    );
-  }
-
-  Widget _buildHeader() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Text(
-          DateFormat('yyyy年 MM月').format(focusedMonth),
-          style: const TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-            color: CupertinoColors.label,
-          ),
-        ),
-      ],
     );
   }
 
@@ -80,7 +111,24 @@ class CustomCalendar extends StatelessWidget {
     List<Widget> weeks = [];
     DateTime currentDate = startDate;
 
-    for (int week = 0; week < 6; week++) {
+    // 动态计算需要的行数，不固定为6行
+    while (true) {
+      // 检查这一行是否包含当前月份的任何一天
+      DateTime weekStartDate = currentDate;
+      bool hasCurrentMonthDay = false;
+      for (int day = 0; day < 7; day++) {
+        if (weekStartDate.add(Duration(days: day)).month ==
+            focusedMonth.month) {
+          hasCurrentMonthDay = true;
+          break;
+        }
+      }
+
+      // 如果这一行不包含当前月份的任何一天，且我们至少已经有了一行，则停止
+      if (!hasCurrentMonthDay && weeks.isNotEmpty) {
+        break;
+      }
+
       List<Widget> days = [];
       for (int day = 0; day < 7; day++) {
         days.add(_buildDayCell(currentDate, firstDay, lastDay));
@@ -93,10 +141,8 @@ class CustomCalendar extends StatelessWidget {
         ),
       );
 
-      // 如果当前月份的所有天都已经显示完了，就停止添加新的周
-      if (currentDate.month != focusedMonth.month &&
-          currentDate.subtract(const Duration(days: 1)).month ==
-              focusedMonth.month) {
+      // 安全保护：防止无限循环，最多6行
+      if (weeks.length >= 6) {
         break;
       }
     }
