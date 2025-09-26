@@ -8,6 +8,10 @@ class MainLayout extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final currentIndex = _calculateSelectedIndex(context);
+    final shouldShowFab =
+        currentIndex == 0 || currentIndex == 1; // 只在首页(0)和详情页(1)显示
+
     return LayoutBuilder(
       builder: (context, constraints) {
         // Use NavigationRail for wider screens
@@ -16,25 +20,38 @@ class MainLayout extends StatelessWidget {
             body: Row(
               children: [
                 NavigationRail(
-                  selectedIndex: _calculateSelectedIndex(context),
-                  onDestinationSelected: (index) => _onItemTapped(index, context),
+                  selectedIndex: currentIndex,
+                  onDestinationSelected: (index) =>
+                      _onItemTapped(index, context),
                   labelType: NavigationRailLabelType.all,
                   destinations: const [
-                    NavigationRailDestination(icon: Icon(Icons.home), label: Text('Home')),
-                    NavigationRailDestination(icon: Icon(Icons.list), label: Text('Details')),
-                    NavigationRailDestination(icon: Icon(Icons.account_balance_wallet), label: Text('Assets')),
-                    NavigationRailDestination(icon: Icon(Icons.bar_chart), label: Text('Statistics')),
-                    NavigationRailDestination(icon: Icon(Icons.settings), label: Text('Settings')),
+                    NavigationRailDestination(
+                        icon: Icon(Icons.home), label: Text('Home')),
+                    NavigationRailDestination(
+                        icon: Icon(Icons.list), label: Text('Details')),
+                    NavigationRailDestination(
+                        icon: Icon(Icons.account_balance_wallet),
+                        label: Text('Assets')),
+                    NavigationRailDestination(
+                        icon: Icon(Icons.bar_chart), label: Text('Statistics')),
+                    NavigationRailDestination(
+                        icon: Icon(Icons.settings), label: Text('Settings')),
                   ],
                 ),
                 const VerticalDivider(thickness: 1, width: 1),
                 Expanded(child: child),
               ],
             ),
-            floatingActionButton: FloatingActionButton(
-              onPressed: () => context.go('/add-transaction'),
-              child: const Icon(Icons.add),
-            ),
+            floatingActionButton: shouldShowFab
+                ? FloatingActionButton(
+                    onPressed: () => context.go('/add-transaction'),
+                    backgroundColor: const Color(0xFF1976D2), // 更亮的蓝色
+                    foregroundColor: Colors.white,
+                    elevation: 8,
+                    shape: const CircleBorder(), // 明确设置为圆形
+                    child: const Icon(Icons.add, size: 28),
+                  )
+                : null,
           );
         }
 
@@ -43,21 +60,31 @@ class MainLayout extends StatelessWidget {
           body: child,
           bottomNavigationBar: BottomNavigationBar(
             type: BottomNavigationBarType.fixed,
-            currentIndex: _calculateSelectedIndex(context),
+            currentIndex: currentIndex,
             onTap: (index) => _onItemTapped(index, context),
             items: const [
               BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
               BottomNavigationBarItem(icon: Icon(Icons.list), label: 'Details'),
-              BottomNavigationBarItem(icon: Icon(Icons.account_balance_wallet), label: 'Assets'),
-              BottomNavigationBarItem(icon: Icon(Icons.bar_chart), label: 'Statistics'),
-              BottomNavigationBarItem(icon: Icon(Icons.settings), label: 'Settings'),
+              BottomNavigationBarItem(
+                  icon: Icon(Icons.account_balance_wallet), label: 'Assets'),
+              BottomNavigationBarItem(
+                  icon: Icon(Icons.bar_chart), label: 'Statistics'),
+              BottomNavigationBarItem(
+                  icon: Icon(Icons.settings), label: 'Settings'),
             ],
           ),
-          floatingActionButton: FloatingActionButton(
-            onPressed: () => context.go('/add-transaction'),
-            child: const Icon(Icons.add),
-          ),
-          floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+          floatingActionButton: shouldShowFab
+              ? FloatingActionButton(
+                  onPressed: () => context.go('/add-transaction'),
+                  backgroundColor: const Color(0xFF1976D2), // 更亮的蓝色
+                  foregroundColor: Colors.white,
+                  elevation: 8,
+                  shape: const CircleBorder(), // 明确设置为圆形
+                  child: const Icon(Icons.add, size: 28),
+                )
+              : null,
+          floatingActionButtonLocation:
+              shouldShowFab ? FloatingActionButtonLocation.endFloat : null,
         );
       },
     );
@@ -74,11 +101,21 @@ class MainLayout extends StatelessWidget {
 
   void _onItemTapped(int index, BuildContext context) {
     switch (index) {
-      case 0: context.go('/'); break;
-      case 1: context.go('/details'); break;
-      case 2: context.go('/assets'); break;
-      case 3: context.go('/statistics'); break;
-      case 4: context.go('/settings'); break;
+      case 0:
+        context.go('/');
+        break;
+      case 1:
+        context.go('/details');
+        break;
+      case 2:
+        context.go('/assets');
+        break;
+      case 3:
+        context.go('/statistics');
+        break;
+      case 4:
+        context.go('/settings');
+        break;
     }
   }
 }

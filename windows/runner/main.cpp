@@ -30,7 +30,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
   int screenWidth = GetSystemMetrics(SM_CXSCREEN);
   int screenHeight = GetSystemMetrics(SM_CYSCREEN);
   
-  Win32Window::Size size(600, 1000);
+  Win32Window::Size size(600, 1200);
   
   // Calculate center position
   int centerX = (screenWidth - size.width) / 2;

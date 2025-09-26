@@ -218,12 +218,12 @@ Win32Window::MessageHandler(HWND hwnd,
       return 0;
 
     case WM_GETMINMAXINFO: {
-      // Limit window size to 600x1200, prevent resizing
+      // Allow height adjustment, fix width to 600
       MINMAXINFO* minMaxInfo = reinterpret_cast<MINMAXINFO*>(lparam);
-      minMaxInfo->ptMinTrackSize.x = 600;
-      minMaxInfo->ptMinTrackSize.y = 1000;
-      minMaxInfo->ptMaxTrackSize.x = 600;
-      minMaxInfo->ptMaxTrackSize.y = 1000;
+      minMaxInfo->ptMinTrackSize.x = 600;  // Minimum width: 600px
+      minMaxInfo->ptMinTrackSize.y = 600;  // Minimum height: 600px  
+      minMaxInfo->ptMaxTrackSize.x = 600;  // Maximum width: 600px (fixed)
+      minMaxInfo->ptMaxTrackSize.y = 32767; // Maximum height: system limit (adjustable)
       return 0;
     }
   }

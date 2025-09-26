@@ -158,6 +158,23 @@ class AssetDetailScreen extends StatelessWidget {
         sortedRecords.map((r) => r.amount).reduce((a, b) => a > b ? a : b);
     final padding = (maxY - minY) * 0.1;
 
+    // 计算合适的水平间隔，避免为0的情况
+    double horizontalInterval;
+    double displayMinY, displayMaxY;
+
+    if (maxY == minY) {
+      // 当只有一个数据点或所有数据点相同时，使用固定间隔
+      horizontalInterval = maxY > 0 ? maxY / 4 : 100;
+      // 为单个数据点创建合理的Y轴范围
+      final range = maxY > 0 ? maxY * 0.2 : 100;
+      displayMinY = maxY - range;
+      displayMaxY = maxY + range;
+    } else {
+      horizontalInterval = (maxY - minY) / 4;
+      displayMinY = minY - padding;
+      displayMaxY = maxY + padding;
+    }
+
     return Container(
       decoration: BoxDecoration(
         color: CupertinoColors.systemBackground,
@@ -174,7 +191,7 @@ class AssetDetailScreen extends StatelessWidget {
             gridData: FlGridData(
               show: true,
               drawVerticalLine: false,
-              horizontalInterval: (maxY - minY) / 4,
+              horizontalInterval: horizontalInterval,
               getDrawingHorizontalLine: (value) {
                 return const FlLine(
                   color: CupertinoColors.separator,
@@ -240,8 +257,8 @@ class AssetDetailScreen extends StatelessWidget {
             ),
             minX: 0,
             maxX: (sortedRecords.length - 1).toDouble(),
-            minY: minY - padding,
-            maxY: maxY + padding,
+            minY: displayMinY,
+            maxY: displayMaxY,
             lineBarsData: [
               LineChartBarData(
                 spots: spots,
