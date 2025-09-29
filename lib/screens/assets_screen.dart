@@ -20,7 +20,6 @@ class AssetsScreen extends StatelessWidget {
             navigationBar: CupertinoNavigationBar(
               backgroundColor:
                   CupertinoColors.systemBackground.withOpacity(0.8),
-              border: null,
               middle: const Text(
                 '我的资产',
                 style: TextStyle(
@@ -425,21 +424,24 @@ class AssetsScreen extends StatelessWidget {
           final success = await provider.deleteAsset(asset.id);
           if (!success) {
             // 删除失败，显示错误消息
-            showCupertinoDialog(
-              context: context,
-              builder: (BuildContext context) {
-                return CupertinoAlertDialog(
-                  title: const Text('删除失败'),
-                  content: const Text('无法删除该资产，请稍后再试。'),
-                  actions: [
-                    CupertinoDialogAction(
-                      child: const Text('确定'),
-                      onPressed: () => Navigator.of(context).pop(),
-                    ),
-                  ],
-                );
-              },
-            );
+            if (context.mounted) {
+              // 检查widget是否仍然mounted
+              showCupertinoDialog(
+                context: context,
+                builder: (BuildContext context) {
+                  return CupertinoAlertDialog(
+                    title: const Text('删除失败'),
+                    content: const Text('无法删除该资产，请稍后再试。'),
+                    actions: [
+                      CupertinoDialogAction(
+                        child: const Text('确定'),
+                        onPressed: () => Navigator.of(context).pop(),
+                      ),
+                    ],
+                  );
+                },
+              );
+            }
           }
         },
         background: Container(
@@ -921,14 +923,17 @@ class _AddAssetPageState extends State<_AddAssetPage> {
     final success =
         await widget.provider.createAsset(name, _selectedCategoryId);
 
-    setState(() {
-      _isLoading = false;
-    });
+    if (mounted) {
+      // 检查widget是否仍然mounted
+      setState(() {
+        _isLoading = false;
+      });
 
-    if (success) {
-      Navigator.of(context).pop();
-    } else {
-      _showErrorDialog('添加资产失败，请稍后重试');
+      if (success) {
+        Navigator.of(context).pop();
+      } else {
+        _showErrorDialog('添加资产失败，请稍后重试');
+      }
     }
   }
 

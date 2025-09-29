@@ -91,38 +91,64 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildMonthSelector(HomeProvider provider) {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 16),
-      color: CupertinoColors.systemBackground,
+      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Colors.white, Color(0xFFF8F9FA)],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+        ),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.08),
+            blurRadius: 20,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          CupertinoButton(
-            padding: EdgeInsets.zero,
-            minSize: 44,
-            child: const Icon(
-              CupertinoIcons.chevron_left,
-              color: CupertinoColors.systemBlue,
-              size: 20,
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            child: CupertinoButton(
+              padding: EdgeInsets.zero,
+              minSize: 44,
+              child: Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF667EEA).withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(
+                  CupertinoIcons.chevron_left,
+                  color: Color(0xFF667EEA),
+                  size: 18,
+                ),
+              ),
+              onPressed: () {
+                final previousMonth = DateTime(
+                  provider.selectedMonth.year,
+                  provider.selectedMonth.month - 1,
+                );
+                provider.fetchData(previousMonth);
+
+                // 智能选择新月份中的日期
+                final newSelectedDate = _getSmartSelectedDate(previousMonth);
+
+                setState(() {
+                  _selectedDayTransactions = [];
+                  _selectedDate = newSelectedDate;
+                });
+
+                // 自动获取选中日期的交易记录
+                _fetchTransactionsForDay(_selectedDate);
+              },
             ),
-            onPressed: () {
-              final previousMonth = DateTime(
-                provider.selectedMonth.year,
-                provider.selectedMonth.month - 1,
-              );
-              provider.fetchData(previousMonth);
-
-              // 智能选择新月份中的日期
-              final newSelectedDate = _getSmartSelectedDate(previousMonth);
-
-              setState(() {
-                _selectedDayTransactions = [];
-                _selectedDate = newSelectedDate;
-              });
-
-              // 自动获取选中日期的交易记录
-              _fetchTransactionsForDay(_selectedDate);
-            },
           ),
+          const SizedBox(width: 16),
           GestureDetector(
             onTap: () async {
               await showCupertinoModalPopup<DateTime>(
@@ -191,50 +217,83 @@ class _HomeScreenState extends State<HomeScreen> {
               );
             },
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
               decoration: BoxDecoration(
-                color: CupertinoColors.systemFill,
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Text(
-                DateFormat('yyyy.MM').format(provider.selectedMonth),
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500,
-                  color: CupertinoColors.label,
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF667EEA), Color(0xFF764BA2)],
+                  begin: Alignment.centerLeft,
+                  end: Alignment.centerRight,
                 ),
+                borderRadius: BorderRadius.circular(25),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF667EEA).withOpacity(0.4),
+                    blurRadius: 15,
+                    offset: const Offset(0, 5),
+                  ),
+                ],
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(
+                    CupertinoIcons.calendar,
+                    color: Colors.white,
+                    size: 16,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    DateFormat('yyyy年MM月').format(provider.selectedMonth),
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
-          CupertinoButton(
-            padding: EdgeInsets.zero,
-            minSize: 44,
-            child: const Icon(
-              CupertinoIcons.chevron_right,
-              color: CupertinoColors.systemBlue,
-              size: 20,
+          const SizedBox(width: 16),
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            child: CupertinoButton(
+              padding: EdgeInsets.zero,
+              minSize: 44,
+              child: Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF667EEA).withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(
+                  CupertinoIcons.chevron_right,
+                  color: Color(0xFF667EEA),
+                  size: 18,
+                ),
+              ),
+              onPressed: () {
+                final nextMonth = DateTime(
+                  provider.selectedMonth.year,
+                  provider.selectedMonth.month + 1,
+                );
+                if (nextMonth.isBefore(DateTime.now()) ||
+                    nextMonth.month == DateTime.now().month) {
+                  provider.fetchData(nextMonth);
+
+                  // 智能选择新月份中的日期
+                  final newSelectedDate = _getSmartSelectedDate(nextMonth);
+
+                  setState(() {
+                    _selectedDayTransactions = [];
+                    _selectedDate = newSelectedDate;
+                  });
+
+                  // 自动获取选中日期的交易记录
+                  _fetchTransactionsForDay(_selectedDate);
+                }
+              },
             ),
-            onPressed: () {
-              final nextMonth = DateTime(
-                provider.selectedMonth.year,
-                provider.selectedMonth.month + 1,
-              );
-              if (nextMonth.isBefore(DateTime.now()) ||
-                  nextMonth.month == DateTime.now().month) {
-                provider.fetchData(nextMonth);
-
-                // 智能选择新月份中的日期
-                final newSelectedDate = _getSmartSelectedDate(nextMonth);
-
-                setState(() {
-                  _selectedDayTransactions = [];
-                  _selectedDate = newSelectedDate;
-                });
-
-                // 自动获取选中日期的交易记录
-                _fetchTransactionsForDay(_selectedDate);
-              }
-            },
           ),
         ],
       ),
@@ -247,19 +306,40 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Container(
           margin: const EdgeInsets.symmetric(horizontal: 16),
           decoration: BoxDecoration(
-            color: CupertinoColors.systemBackground,
-            borderRadius: BorderRadius.circular(12),
+            gradient: const LinearGradient(
+              colors: [Colors.white, Color(0xFFFAFBFC)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(20),
             boxShadow: [
               BoxShadow(
-                color: CupertinoColors.separator.withOpacity(0.3),
+                color: Colors.black.withOpacity(0.08),
                 spreadRadius: 0,
-                blurRadius: 8,
-                offset: const Offset(0, 1),
+                blurRadius: 20,
+                offset: const Offset(0, 8),
               ),
             ],
           ),
           child: const Center(
-            child: CupertinoActivityIndicator(),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                CupertinoActivityIndicator(
+                  color: Color(0xFF667EEA),
+                  radius: 16,
+                ),
+                SizedBox(height: 16),
+                Text(
+                  '加载中...',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Color(0xFF667EEA),
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       );
@@ -270,24 +350,67 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Container(
           margin: const EdgeInsets.symmetric(horizontal: 16), // 与日历容器对齐
           decoration: BoxDecoration(
-            color: CupertinoColors.systemBackground,
-            borderRadius: BorderRadius.circular(12),
+            gradient: const LinearGradient(
+              colors: [Colors.white, Color(0xFFFAFBFC)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(20),
             boxShadow: [
               BoxShadow(
-                color: CupertinoColors.separator.withOpacity(0.3),
+                color: Colors.black.withOpacity(0.08),
                 spreadRadius: 0,
-                blurRadius: 8,
-                offset: const Offset(0, 1),
+                blurRadius: 20,
+                offset: const Offset(0, 8),
               ),
             ],
           ),
-          child: const Center(
+          child: Center(
             child: Padding(
-              padding: EdgeInsets.all(32),
-              child: Text(
-                '点击日历选择日期查看交易',
-                style: TextStyle(color: CupertinoColors.placeholderText),
-                textAlign: TextAlign.center,
+              padding: const EdgeInsets.all(40),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 64,
+                    height: 64,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          const Color(0xFF667EEA).withOpacity(0.2),
+                          const Color(0xFF764BA2).withOpacity(0.2),
+                        ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      CupertinoIcons.calendar_today,
+                      color: Color(0xFF667EEA),
+                      size: 28,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  const Text(
+                    '选择日期查看交易',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF4A5568),
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    '点击日历上的日期来查看当天的交易记录',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey[600],
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
               ),
             ),
           ),
@@ -307,14 +430,24 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Container(
         margin: const EdgeInsets.symmetric(horizontal: 16), // 与日历容器对齐
         decoration: BoxDecoration(
-          color: CupertinoColors.systemBackground,
-          borderRadius: BorderRadius.circular(12),
+          gradient: const LinearGradient(
+            colors: [Colors.white, Color(0xFFFAFBFC)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: CupertinoColors.separator.withOpacity(0.3),
+              color: Colors.black.withOpacity(0.08),
               spreadRadius: 0,
-              blurRadius: 8,
-              offset: const Offset(0, 1),
+              blurRadius: 20,
+              offset: const Offset(0, 8),
+            ),
+            BoxShadow(
+              color: const Color(0xFF667EEA).withOpacity(0.1),
+              spreadRadius: 0,
+              blurRadius: 30,
+              offset: const Offset(0, 12),
             ),
           ],
         ),
@@ -323,31 +456,70 @@ class _HomeScreenState extends State<HomeScreen> {
           children: [
             // 日期和支出总览 - 固定头部
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-              decoration: const BoxDecoration(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFFF8F9FA), Colors.white],
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                ),
                 border: Border(
                   bottom: BorderSide(
-                    color: CupertinoColors.separator,
-                    width: 0.5,
+                    color: Colors.grey.withOpacity(0.15),
+                    width: 1,
                   ),
+                ),
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(20),
+                  topRight: Radius.circular(20),
                 ),
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    dateStr,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: CupertinoColors.label,
-                    ),
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            colors: [Color(0xFF667EEA), Color(0xFF764BA2)],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Icon(
+                          CupertinoIcons.calendar_today,
+                          color: Colors.white,
+                          size: 16,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Text(
+                        dateStr,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          color: Color(0xFF2D3748),
+                        ),
+                      ),
+                    ],
                   ),
-                  Text(
-                    '支出: ¥${totalExpense.toStringAsFixed(2)}',
-                    style: const TextStyle(
-                      fontSize: 14,
-                      color: CupertinoColors.placeholderText,
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFF6B6B).withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      '支出 ¥${totalExpense.toStringAsFixed(2)}',
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFFFF6B6B),
+                      ),
                     ),
                   ),
                 ],
@@ -375,21 +547,54 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildTransactionItem(Transaction transaction) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+    // 根据交易类型选择颜色
+    final Color iconColor = transaction.type == 'expense'
+        ? const Color(0xFFFF6B6B)
+        : const Color(0xFF4ECDC4);
+    final Color bgColor = iconColor.withOpacity(0.12);
+
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 200),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      decoration: BoxDecoration(
+        color: Colors.transparent,
+        border: Border(
+          bottom: BorderSide(
+            color: Colors.grey.withOpacity(0.08),
+            width: 1,
+          ),
+        ),
+      ),
       child: Row(
         children: [
-          Container(
-            width: 36,
-            height: 36,
-            decoration: BoxDecoration(
-              color: CupertinoColors.systemOrange.withOpacity(0.2),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              CategoryUtils.getCategoryIcon(transaction.categoryKey),
-              color: CupertinoColors.systemOrange,
-              size: 16,
+          Hero(
+            tag: 'transaction_${transaction.id}_icon',
+            child: Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    bgColor,
+                    bgColor.withOpacity(0.6),
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: iconColor.withOpacity(0.2),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Icon(
+                CategoryUtils.getCategoryIcon(transaction.categoryKey),
+                color: iconColor,
+                size: 20,
+              ),
             ),
           ),
           const SizedBox(width: 16),
@@ -403,29 +608,74 @@ class _HomeScreenState extends State<HomeScreen> {
                       : transaction.description,
                   style: const TextStyle(
                     fontSize: 15,
-                    fontWeight: FontWeight.w500,
-                    color: CupertinoColors.label,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF2D3748),
                   ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: 2),
-                Text(
-                  '${DateFormat('HH:mm').format(transaction.date)} • ${CategoryUtils.getCategoryName(transaction.categoryKey)}',
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: CupertinoColors.placeholderText,
-                  ),
+                const SizedBox(height: 4),
+                Row(
+                  children: [
+                    Icon(
+                      CupertinoIcons.time,
+                      size: 12,
+                      color: Colors.grey[500],
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      DateFormat('HH:mm').format(transaction.date),
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey[600],
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Container(
+                      width: 3,
+                      height: 3,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[400],
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        CategoryUtils.getCategoryName(transaction.categoryKey),
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey[600],
+                          fontWeight: FontWeight.w500,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
           ),
-          Text(
-            '${transaction.type == 'expense' ? '-' : '+'}¥${transaction.amount.toStringAsFixed(2)}',
-            style: TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.w600,
+          const SizedBox(width: 12),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
               color: transaction.type == 'expense'
-                  ? CupertinoColors.label
-                  : CupertinoColors.systemGreen,
+                  ? const Color(0xFFFF6B6B).withOpacity(0.1)
+                  : const Color(0xFF4ECDC4).withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Text(
+              '${transaction.type == 'expense' ? '-' : '+'}¥${transaction.amount.toStringAsFixed(2)}',
+              style: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w700,
+                color: transaction.type == 'expense'
+                    ? const Color(0xFFFF6B6B)
+                    : const Color(0xFF4ECDC4),
+              ),
             ),
           ),
         ],
@@ -479,94 +729,228 @@ class _HomeScreenState extends State<HomeScreen> {
     return Consumer<HomeProvider>(
       builder: (context, provider, child) {
         return CupertinoPageScaffold(
-          backgroundColor: CupertinoColors.systemGroupedBackground,
+          backgroundColor: Colors.transparent,
           navigationBar: CupertinoNavigationBar(
-            backgroundColor: CupertinoColors.systemBackground,
+            backgroundColor: Colors.white.withOpacity(0.95),
             border: null,
-            middle: const Text(
-              '默认账本',
-              style: TextStyle(
-                color: CupertinoColors.label,
-                fontSize: 17,
-                fontWeight: FontWeight.w600,
+            middle: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF667EEA), Color(0xFF764BA2)],
+                  begin: Alignment.centerLeft,
+                  end: Alignment.centerRight,
+                ),
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF667EEA).withOpacity(0.3),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: const Text(
+                '💰 默认账本',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
             trailing: CupertinoButton(
               padding: EdgeInsets.zero,
               child: Container(
                 padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 decoration: BoxDecoration(
-                  color: CupertinoColors.systemBlue,
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: const Text(
-                  '记一笔',
-                  style: TextStyle(
-                    color: CupertinoColors.white,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF6C63FF), Color(0xFF3F51B5)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
                   ),
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF6C63FF).withOpacity(0.3),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      CupertinoIcons.add_circled_solid,
+                      color: Colors.white,
+                      size: 16,
+                    ),
+                    SizedBox(width: 6),
+                    Text(
+                      '记一笔',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
                 ),
               ),
               onPressed: () => context.go('/add-transaction'),
             ),
           ),
-          child: provider.isLoading
-              ? const Center(child: CupertinoActivityIndicator())
-              : Stack(
-                  children: [
-                    SafeArea(
-                      child: Column(
-                        children: [
-                          // 月份选择器
-                          _buildMonthSelector(provider),
-                          // 日历视图 - 动态高度
-                          Container(
-                            height: CustomCalendar.calculateHeight(
-                                provider.selectedMonth),
-                            margin: const EdgeInsets.symmetric(horizontal: 16),
-                            decoration: BoxDecoration(
-                              color: CupertinoColors.systemBackground,
-                              borderRadius: BorderRadius.circular(12),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: CupertinoColors.separator
-                                      .withOpacity(0.3),
-                                  spreadRadius: 0,
-                                  blurRadius: 8,
-                                  offset: const Offset(0, 1),
-                                ),
+          child: Container(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  Color(0xFFF8F9FA),
+                  Color(0xFFE9ECEF),
+                  Color(0xFFF8F9FA),
+                ],
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                stops: [0.0, 0.5, 1.0],
+              ),
+            ),
+            child: provider.isLoading
+                ? const Center(child: CupertinoActivityIndicator())
+                : Stack(
+                    children: [
+                      // 装饰性背景元素
+                      Positioned(
+                        top: -100,
+                        right: -100,
+                        child: Container(
+                          width: 200,
+                          height: 200,
+                          decoration: BoxDecoration(
+                            gradient: RadialGradient(
+                              colors: [
+                                const Color(0xFF667EEA).withOpacity(0.1),
+                                Colors.transparent,
                               ],
                             ),
-                            child: CustomCalendar(
-                              focusedMonth: provider.selectedMonth,
-                              selectedDay: _selectedDate,
-                              transactions: provider.transactions,
-                              onDaySelected: _fetchTransactionsForDay,
+                          ),
+                        ),
+                      ),
+                      Positioned(
+                        bottom: -80,
+                        left: -80,
+                        child: Container(
+                          width: 160,
+                          height: 160,
+                          decoration: BoxDecoration(
+                            gradient: RadialGradient(
+                              colors: [
+                                const Color(0xFF764BA2).withOpacity(0.08),
+                                Colors.transparent,
+                              ],
                             ),
                           ),
-                          const SizedBox(height: 16),
-                          // 选中日期的交易详情 - 可滚动列表
-                          _buildSelectedDaySection(),
-                        ],
+                        ),
                       ),
-                    ),
-                    // 浮动按钮
-                    Positioned(
-                      bottom: 70,
-                      right: 20,
-                      child: FloatingActionButton(
-                        onPressed: () => context.go('/add-transaction'),
-                        backgroundColor: const Color(0xFF1976D2), // 更亮的蓝色
-                        foregroundColor: Colors.white,
-                        elevation: 8,
-                        shape: const CircleBorder(), // 明确设置为圆形
-                        child: const Icon(Icons.add, size: 28),
+                      SafeArea(
+                        child: Column(
+                          children: [
+                            // 月份选择器
+                            _buildMonthSelector(provider),
+                            // 日历视图 - 动态高度
+                            Container(
+                              margin:
+                                  const EdgeInsets.symmetric(horizontal: 16),
+                              decoration: BoxDecoration(
+                                gradient: const LinearGradient(
+                                  colors: [Colors.white, Color(0xFFFAFBFC)],
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                ),
+                                borderRadius: BorderRadius.circular(20),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.08),
+                                    spreadRadius: 0,
+                                    blurRadius: 20,
+                                    offset: const Offset(0, 8),
+                                  ),
+                                  BoxShadow(
+                                    color: const Color(0xFF667EEA)
+                                        .withOpacity(0.1),
+                                    spreadRadius: 0,
+                                    blurRadius: 30,
+                                    offset: const Offset(0, 12),
+                                  ),
+                                ],
+                              ),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(20),
+                                child: CustomCalendar(
+                                  focusedMonth: provider.selectedMonth,
+                                  selectedDay: _selectedDate,
+                                  transactions: provider.transactions,
+                                  onDaySelected: _fetchTransactionsForDay,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            // 选中日期的交易详情 - 可滚动列表
+                            _buildSelectedDaySection(),
+                          ],
+                        ),
                       ),
-                    ),
-                  ],
-                ),
+                      // 浮动按钮
+                      Positioned(
+                        bottom: 85,
+                        right: 24,
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 300),
+                          child: FloatingActionButton.large(
+                            onPressed: () => context.go('/add-transaction'),
+                            elevation: 0,
+                            backgroundColor: Colors.transparent,
+                            shape: const CircleBorder(),
+                            child: Container(
+                              width: 64,
+                              height: 64,
+                              decoration: BoxDecoration(
+                                gradient: const LinearGradient(
+                                  colors: [
+                                    Color(0xFF6C63FF),
+                                    Color(0xFF3F51B5)
+                                  ],
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                ),
+                                shape: BoxShape.circle,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: const Color(0xFF6C63FF)
+                                        .withOpacity(0.4),
+                                    blurRadius: 20,
+                                    offset: const Offset(0, 8),
+                                  ),
+                                  BoxShadow(
+                                    color: const Color(0xFF6C63FF)
+                                        .withOpacity(0.2),
+                                    blurRadius: 40,
+                                    offset: const Offset(0, 16),
+                                  ),
+                                ],
+                              ),
+                              child: const Icon(
+                                CupertinoIcons.add,
+                                color: Colors.white,
+                                size: 28,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+          ),
         );
       },
     );

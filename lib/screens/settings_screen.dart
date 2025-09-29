@@ -237,20 +237,22 @@ class SettingsScreen extends StatelessWidget {
                 formKey.currentState!.save();
                 final success = await provider.updateUserPassword(
                     currentPassword, newPassword);
-                Navigator.of(ctx).pop();
-                showCupertinoDialog(
-                  context: context,
-                  builder: (context) => CupertinoAlertDialog(
-                    title: Text(success ? '成功' : '失败'),
-                    content: Text(success ? '密码已更新' : '更新密码失败'),
-                    actions: [
-                      CupertinoDialogAction(
-                        onPressed: () => Navigator.of(context).pop(),
-                        child: const Text('确定'),
-                      ),
-                    ],
-                  ),
-                );
+                if (ctx.mounted) {
+                  Navigator.of(ctx).pop();
+                  showCupertinoDialog(
+                    context: ctx,
+                    builder: (context) => CupertinoAlertDialog(
+                      title: Text(success ? '成功' : '失败'),
+                      content: Text(success ? '密码已更新' : '更新密码失败'),
+                      actions: [
+                        CupertinoDialogAction(
+                          onPressed: () => Navigator.of(context).pop(),
+                          child: const Text('确定'),
+                        ),
+                      ],
+                    ),
+                  );
+                }
               }
             },
             child: const Text('更新'),
@@ -306,20 +308,23 @@ class SettingsScreen extends StatelessWidget {
               if (formKey.currentState!.validate()) {
                 formKey.currentState!.save();
                 final success = await provider.updateUserEmail(email, password);
-                Navigator.of(ctx).pop();
-                showCupertinoDialog(
-                  context: context,
-                  builder: (context) => CupertinoAlertDialog(
-                    title: Text(success ? '成功' : '失败'),
-                    content: Text(success ? '邮箱已更新' : '更新邮箱失败'),
-                    actions: [
-                      CupertinoDialogAction(
-                        onPressed: () => Navigator.of(context).pop(),
-                        child: const Text('确定'),
-                      ),
-                    ],
-                  ),
-                );
+
+                if (ctx.mounted) {
+                  Navigator.of(ctx).pop();
+                  showCupertinoDialog(
+                    context: ctx,
+                    builder: (context) => CupertinoAlertDialog(
+                      title: Text(success ? '成功' : '失败'),
+                      content: Text(success ? '邮箱已更新' : '更新邮箱失败'),
+                      actions: [
+                        CupertinoDialogAction(
+                          onPressed: () => Navigator.of(context).pop(),
+                          child: const Text('确定'),
+                        ),
+                      ],
+                    ),
+                  );
+                }
               }
             },
             child: const Text('更新'),

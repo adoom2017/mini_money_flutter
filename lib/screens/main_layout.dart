@@ -60,23 +60,23 @@ class _MainLayoutState extends State<MainLayout> {
             items: const [
               BottomNavigationBarItem(
                 icon: Icon(CupertinoIcons.home),
-                label: 'Home',
+                label: '首页',
               ),
               BottomNavigationBarItem(
                 icon: Icon(CupertinoIcons.list_bullet),
-                label: 'Details',
+                label: '详情',
               ),
               BottomNavigationBarItem(
                 icon: Icon(CupertinoIcons.creditcard),
-                label: 'Assets',
+                label: '资产',
               ),
               BottomNavigationBarItem(
                 icon: Icon(CupertinoIcons.chart_bar),
-                label: 'Statistics',
+                label: '统计',
               ),
               BottomNavigationBarItem(
                 icon: Icon(CupertinoIcons.settings),
-                label: 'Settings',
+                label: '设置',
               ),
             ],
           ),

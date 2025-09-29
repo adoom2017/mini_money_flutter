@@ -119,6 +119,7 @@ class _EditTransactionScreenState extends State<EditTransactionScreen> {
       } else {
         AppLogger.warning(
             '交易创建失败', 'HTTP ${response.statusCode}: ${response.body}');
+        if (!mounted) return;
         showCupertinoDialog(
           context: context,
           builder: (context) => CupertinoAlertDialog(

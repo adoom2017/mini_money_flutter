@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'dart:convert';
 import 'package:flutter/cupertino.dart';
 import 'package:provider/provider.dart';
@@ -37,23 +39,26 @@ class _LoginScreenState extends State<LoginScreen> {
         final response = await _apiService.login(_username, _password);
         if (response.statusCode == 200) {
           final data = jsonDecode(response.body);
+          if (context.mounted) return;
           await Provider.of<AuthProvider>(context, listen: false)
               .login(data['token']);
         } else {
           // Handle login error
-          showCupertinoDialog(
-            context: context,
-            builder: (context) => CupertinoAlertDialog(
-              title: const Text('登录失败'),
-              content: const Text('请检查您的登录凭据'),
-              actions: [
-                CupertinoDialogAction(
-                  onPressed: () => Navigator.of(context).pop(),
-                  child: const Text('确定'),
-                ),
-              ],
-            ),
-          );
+          if (context.mounted) {
+            showCupertinoDialog(
+              context: context,
+              builder: (context) => CupertinoAlertDialog(
+                title: const Text('登录失败'),
+                content: const Text('请检查您的登录凭据'),
+                actions: [
+                  CupertinoDialogAction(
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: const Text('确定'),
+                  ),
+                ],
+              ),
+            );
+          }
         }
       } else {
         final response =
@@ -63,40 +68,46 @@ class _LoginScreenState extends State<LoginScreen> {
           final loginResponse = await _apiService.login(_username, _password);
           if (loginResponse.statusCode == 200) {
             final data = jsonDecode(loginResponse.body);
-            await Provider.of<AuthProvider>(context, listen: false)
-                .login(data['token']);
+            if (context.mounted) {
+              await Provider.of<AuthProvider>(context, listen: false)
+                  .login(data['token']);
+            }
           }
         } else {
           // Handle registration error
-          showCupertinoDialog(
-            context: context,
-            builder: (context) => CupertinoAlertDialog(
-              title: const Text('注册失败'),
-              content: const Text('请重试'),
-              actions: [
-                CupertinoDialogAction(
-                  onPressed: () => Navigator.of(context).pop(),
-                  child: const Text('确定'),
-                ),
-              ],
-            ),
-          );
+          if (context.mounted) {
+            showCupertinoDialog(
+              context: context,
+              builder: (context) => CupertinoAlertDialog(
+                title: const Text('注册失败'),
+                content: const Text('请重试'),
+                actions: [
+                  CupertinoDialogAction(
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: const Text('确定'),
+                  ),
+                ],
+              ),
+            );
+          }
         }
       }
     } catch (e) {
-      showCupertinoDialog(
-        context: context,
-        builder: (context) => CupertinoAlertDialog(
-          title: const Text('错误'),
-          content: Text('发生了错误: $e'),
-          actions: [
-            CupertinoDialogAction(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('确定'),
-            ),
-          ],
-        ),
-      );
+      if (context.mounted) {
+        showCupertinoDialog(
+          context: context,
+          builder: (context) => CupertinoAlertDialog(
+            title: const Text('错误'),
+            content: Text('发生了错误: $e'),
+            actions: [
+              CupertinoDialogAction(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('确定'),
+              ),
+            ],
+          ),
+        );
+      }
     } finally {
       if (mounted) {
         setState(() {

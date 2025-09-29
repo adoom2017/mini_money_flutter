@@ -72,6 +72,7 @@ class CustomCalendar extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(12),
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
           _buildWeekdayHeader(),
           const SizedBox(height: 6),
@@ -147,7 +148,10 @@ class CustomCalendar extends StatelessWidget {
       }
     }
 
-    return Column(children: weeks);
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: weeks,
+    );
   }
 
   Widget _buildDayCell(DateTime day, DateTime firstDay, DateTime lastDay) {
