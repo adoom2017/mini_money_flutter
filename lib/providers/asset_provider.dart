@@ -99,4 +99,18 @@ class AssetProvider with ChangeNotifier {
       return null;
     }
   }
+
+  Future<bool> deleteAsset(String assetId) async {
+    try {
+      final response = await _apiService.deleteAsset(assetId);
+      if (response.statusCode == 200) {
+        _assets.removeWhere((asset) => asset.id == assetId);
+        notifyListeners();
+        return true;
+      }
+    } catch (e) {
+      AppLogger.error('Error deleting asset: $e');
+    }
+    return false;
+  }
 }

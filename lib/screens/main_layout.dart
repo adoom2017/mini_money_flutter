@@ -16,14 +16,6 @@ class _MainLayoutState extends State<MainLayout> {
   Widget build(BuildContext context) {
     final currentIndex = _calculateSelectedIndex(context);
 
-    // 添加日志来追踪刷新原因
-    final location = GoRouterState.of(context).matchedLocation;
-    print(
-        'MainLayout.build() called - currentIndex: $currentIndex, location: $location');
-
-    // 追踪LayoutBuilder的构建
-    print('LayoutBuilder about to build for location: $location');
-
     return LayoutBuilder(
       builder: (context, constraints) {
         // Use NavigationRail for wider screens
