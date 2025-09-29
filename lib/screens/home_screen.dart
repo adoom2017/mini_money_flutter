@@ -902,50 +902,15 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                       // 浮动按钮
                       Positioned(
-                        bottom: 85,
-                        right: 24,
-                        child: AnimatedContainer(
-                          duration: const Duration(milliseconds: 300),
-                          child: FloatingActionButton.large(
-                            onPressed: () => context.go('/add-transaction'),
-                            elevation: 0,
-                            backgroundColor: Colors.transparent,
-                            shape: const CircleBorder(),
-                            child: Container(
-                              width: 64,
-                              height: 64,
-                              decoration: BoxDecoration(
-                                gradient: const LinearGradient(
-                                  colors: [
-                                    Color(0xFF6C63FF),
-                                    Color(0xFF3F51B5)
-                                  ],
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.bottomRight,
-                                ),
-                                shape: BoxShape.circle,
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: const Color(0xFF6C63FF)
-                                        .withOpacity(0.4),
-                                    blurRadius: 20,
-                                    offset: const Offset(0, 8),
-                                  ),
-                                  BoxShadow(
-                                    color: const Color(0xFF6C63FF)
-                                        .withOpacity(0.2),
-                                    blurRadius: 40,
-                                    offset: const Offset(0, 16),
-                                  ),
-                                ],
-                              ),
-                              child: const Icon(
-                                CupertinoIcons.add,
-                                color: Colors.white,
-                                size: 28,
-                              ),
-                            ),
-                          ),
+                        bottom: 70,
+                        right: 20,
+                        child: FloatingActionButton(
+                          onPressed: () => context.go('/add-transaction'),
+                          backgroundColor: const Color(0xFF1976D2), // 更亮的蓝色
+                          foregroundColor: Colors.white,
+                          elevation: 8,
+                          shape: const CircleBorder(), // 明确设置为圆形
+                          child: const Icon(Icons.add, size: 28),
                         ),
                       ),
                     ],

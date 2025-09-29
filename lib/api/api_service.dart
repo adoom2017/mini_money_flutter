@@ -130,9 +130,23 @@ class ApiService {
       _request('DELETE', '/transactions/$id');
 
   // Statistics
-  Future<http.Response> getStatistics({required int y, required int m}) =>
-      _request('GET', '/statistics',
-          queryParams: {'year': y.toString(), 'month': m.toString()});
+  Future<http.Response> getStatistics(
+      {required int y, int? m, String? period}) {
+    Map<String, String> queryParams = {'year': y.toString()};
+
+    // 根据API文档逻辑：
+    // 1. 如果提供了month参数，使用按月统计，忽略period参数
+    if (m != null) {
+      queryParams['month'] = m.toString();
+    }
+    // 2. 如果没有month参数但设置了period=year，则按年统计
+    else if (period != null) {
+      queryParams['period'] = period;
+    }
+    // 3. 默认情况下会按当前月份统计（由服务器处理）
+
+    return _request('GET', '/statistics', queryParams: queryParams);
+  }
 
   // Assets
   Future<http.Response> getAssets() => _request('GET', '/assets');
