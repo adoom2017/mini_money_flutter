@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
@@ -145,12 +146,55 @@ class _EditTransactionScreenState extends State<EditTransactionScreen> {
         _type == 'expense' ? _expenseCategories : _incomeCategories;
 
     return CupertinoPageScaffold(
+      backgroundColor: const Color(0xFFF8F9FA),
       navigationBar: CupertinoNavigationBar(
-        middle: const Text('添加交易'),
-        trailing: CupertinoButton(
-          padding: EdgeInsets.zero,
-          onPressed: _submit,
-          child: const Text('保存'),
+        backgroundColor: CupertinoColors.systemBackground.withOpacity(0.8),
+        middle: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [Color(0xFF667EEA), Color(0xFF764BA2)],
+              begin: Alignment.centerLeft,
+              end: Alignment.centerRight,
+            ),
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF667EEA).withOpacity(0.3),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: const Text(
+            '💰 添加交易',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+        trailing: Container(
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [Color(0xFF4CAF50), Color(0xFF45A049)],
+            ),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: CupertinoButton(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            minSize: 0,
+            onPressed: _submit,
+            child: const Text(
+              '保存',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
         ),
       ),
       child: SafeArea(
@@ -165,27 +209,96 @@ class _EditTransactionScreenState extends State<EditTransactionScreen> {
                         padding: const EdgeInsets.all(16.0),
                         child: Column(
                           children: [
-                            // 交易类型选择
-                            CupertinoSlidingSegmentedControl<String>(
-                              groupValue: _type,
-                              onValueChanged: (value) {
-                                setState(() {
-                                  _type = value!;
-                                  _selectedCategoryKey = null;
-                                });
-                              },
-                              children: const {
-                                'expense': Padding(
-                                  padding: EdgeInsets.symmetric(horizontal: 20),
-                                  child: Text('支出'),
-                                ),
-                                'income': Padding(
-                                  padding: EdgeInsets.symmetric(horizontal: 20),
-                                  child: Text('收入'),
-                                ),
-                              },
+                            // 交易类型选择卡片
+                            Container(
+                              margin: const EdgeInsets.symmetric(vertical: 8),
+                              padding: const EdgeInsets.all(20),
+                              decoration: BoxDecoration(
+                                color: CupertinoColors.systemBackground,
+                                borderRadius: BorderRadius.circular(16),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: CupertinoColors.separator
+                                        .withOpacity(0.2),
+                                    spreadRadius: 0,
+                                    blurRadius: 8,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ],
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Row(
+                                    children: [
+                                      Icon(
+                                        CupertinoIcons
+                                            .arrow_up_arrow_down_circle,
+                                        color: Color(0xFF667EEA),
+                                        size: 20,
+                                      ),
+                                      SizedBox(width: 8),
+                                      Text(
+                                        '交易类型',
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w600,
+                                          color: CupertinoColors.label,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 16),
+                                  CupertinoSlidingSegmentedControl<String>(
+                                    groupValue: _type,
+                                    onValueChanged: (value) {
+                                      setState(() {
+                                        _type = value!;
+                                        _selectedCategoryKey = null;
+                                      });
+                                    },
+                                    children: {
+                                      'expense': Container(
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 20, vertical: 8),
+                                        child: const Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
+                                          children: [
+                                            Icon(
+                                              CupertinoIcons.minus_circle_fill,
+                                              color: CupertinoColors.systemRed,
+                                              size: 16,
+                                            ),
+                                            SizedBox(width: 6),
+                                            Text('支出'),
+                                          ],
+                                        ),
+                                      ),
+                                      'income': Container(
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 20, vertical: 8),
+                                        child: const Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
+                                          children: [
+                                            Icon(
+                                              CupertinoIcons.plus_circle_fill,
+                                              color:
+                                                  CupertinoColors.systemGreen,
+                                              size: 16,
+                                            ),
+                                            SizedBox(width: 6),
+                                            Text('收入'),
+                                          ],
+                                        ),
+                                      ),
+                                    },
+                                  ),
+                                ],
+                              ),
                             ),
-                            const SizedBox(height: 32),
+                            const SizedBox(height: 16),
                           ],
                         ),
                       ),
@@ -197,7 +310,7 @@ class _EditTransactionScreenState extends State<EditTransactionScreen> {
                           // 金额输入
                           CupertinoTextFormFieldRow(
                             prefix: const Icon(CupertinoIcons.money_dollar,
-                                color: CupertinoColors.systemGrey),
+                                color: Color(0xFF4CAF50)),
                             placeholder: '金额',
                             keyboardType: TextInputType.number,
                             validator: (value) =>
@@ -207,7 +320,7 @@ class _EditTransactionScreenState extends State<EditTransactionScreen> {
                           // 分类选择
                           CupertinoFormRow(
                             prefix: const Icon(CupertinoIcons.tag,
-                                color: CupertinoColors.systemGrey),
+                                color: Color(0xFF764BA2)),
                             child: Row(
                               children: [
                                 const Text('分类'),
@@ -237,14 +350,14 @@ class _EditTransactionScreenState extends State<EditTransactionScreen> {
                           // 描述输入
                           CupertinoTextFormFieldRow(
                             prefix: const Icon(CupertinoIcons.textformat,
-                                color: CupertinoColors.systemGrey),
+                                color: Color(0xFF667EEA)),
                             placeholder: '描述（可选）',
                             onSaved: (value) => _description = value ?? '',
                           ),
                           // 日期选择
                           CupertinoFormRow(
                             prefix: const Icon(CupertinoIcons.calendar,
-                                color: CupertinoColors.systemGrey),
+                                color: Color(0xFFFF9800)),
                             child: Row(
                               children: [
                                 const Text('日期'),
@@ -283,8 +396,27 @@ class _EditTransactionScreenState extends State<EditTransactionScreen> {
     showCupertinoModalPopup(
       context: context,
       builder: (context) => CupertinoActionSheet(
-        title: const Text('选择分类'),
+        title: const Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              CupertinoIcons.tag_fill,
+              color: Color(0xFF764BA2),
+              size: 18,
+            ),
+            SizedBox(width: 8),
+            Text('选择分类'),
+          ],
+        ),
         actions: categories.map((category) {
+          // 根据分类类型选择图标和颜色
+          IconData icon = _type == 'expense'
+              ? CupertinoIcons.minus_circle_fill
+              : CupertinoIcons.plus_circle_fill;
+          Color color = _type == 'expense'
+              ? CupertinoColors.systemRed
+              : CupertinoColors.systemGreen;
+
           return CupertinoActionSheetAction(
             onPressed: () {
               setState(() {
@@ -292,13 +424,35 @@ class _EditTransactionScreenState extends State<EditTransactionScreen> {
               });
               Navigator.of(context).pop();
             },
-            child: Text(category.key),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  icon,
+                  color: color,
+                  size: 16,
+                ),
+                const SizedBox(width: 8),
+                Text(category.key),
+              ],
+            ),
           );
         }).toList(),
         cancelButton: CupertinoActionSheetAction(
           isDestructiveAction: true,
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('取消'),
+          child: const Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                CupertinoIcons.xmark_circle,
+                color: CupertinoColors.systemRed,
+                size: 16,
+              ),
+              SizedBox(width: 8),
+              Text('取消'),
+            ],
+          ),
         ),
       ),
     );
@@ -309,21 +463,57 @@ class _EditTransactionScreenState extends State<EditTransactionScreen> {
       context: context,
       builder: (context) => Container(
         height: 250,
-        color: CupertinoColors.systemBackground.resolveFrom(context),
+        decoration: BoxDecoration(
+          color: CupertinoColors.systemBackground.resolveFrom(context),
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+        ),
         child: Column(
           children: [
             Container(
-              color: CupertinoColors.systemGrey6.resolveFrom(context),
+              decoration: BoxDecoration(
+                color: CupertinoColors.systemGrey6.resolveFrom(context),
+                borderRadius:
+                    const BorderRadius.vertical(top: Radius.circular(16)),
+              ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   CupertinoButton(
                     onPressed: () => Navigator.of(context).pop(),
-                    child: const Text('取消'),
+                    child: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(CupertinoIcons.xmark,
+                            size: 16, color: CupertinoColors.systemRed),
+                        SizedBox(width: 4),
+                        Text('取消',
+                            style: TextStyle(color: CupertinoColors.systemRed)),
+                      ],
+                    ),
+                  ),
+                  const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(CupertinoIcons.calendar,
+                          color: Color(0xFFFF9800), size: 18),
+                      SizedBox(width: 6),
+                      Text('选择日期',
+                          style: TextStyle(fontWeight: FontWeight.w600)),
+                    ],
                   ),
                   CupertinoButton(
                     onPressed: () => Navigator.of(context).pop(),
-                    child: const Text('完成'),
+                    child: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(CupertinoIcons.checkmark,
+                            size: 16, color: CupertinoColors.systemBlue),
+                        SizedBox(width: 4),
+                        Text('完成',
+                            style:
+                                TextStyle(color: CupertinoColors.systemBlue)),
+                      ],
+                    ),
                   ),
                 ],
               ),

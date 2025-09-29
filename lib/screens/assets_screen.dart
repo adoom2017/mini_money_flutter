@@ -21,15 +21,16 @@ class AssetsScreen extends StatelessWidget {
               backgroundColor:
                   CupertinoColors.systemBackground.withOpacity(0.8),
               middle: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
                     colors: [Color(0xFF667EEA), Color(0xFF764BA2)],
                     begin: Alignment.centerLeft,
                     end: Alignment.centerRight,
                   ),
-                  borderRadius: BorderRadius.circular(20),
+                  borderRadius: const BorderRadius.only(
+                    bottomLeft: Radius.circular(20),
+                    bottomRight: Radius.circular(20),
+                  ),
                   boxShadow: [
                     BoxShadow(
                       color: const Color(0xFF667EEA).withOpacity(0.3),
@@ -38,12 +39,20 @@ class AssetsScreen extends StatelessWidget {
                     ),
                   ],
                 ),
-                child: const Text(
-                  '💰 我的资产',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
+                margin: const EdgeInsets.symmetric(horizontal: 0, vertical: 0),
+                padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 0),
+                child: const SizedBox(
+                  width: double.infinity,
+                  height: 60,
+                  child: Center(
+                    child: Text(
+                      '💰 我的资产',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
                   ),
                 ),
               ),
@@ -647,76 +656,76 @@ class AssetsScreen extends StatelessWidget {
       ),
     );
   }
+}
 
-  void _showAddAssetDialog(BuildContext context, AssetProvider provider) {
-    Navigator.of(context).push(
-      CupertinoPageRoute<void>(
-        builder: (BuildContext context) => _AddAssetPage(provider: provider),
-        fullscreenDialog: true,
+void _showAddAssetDialog(BuildContext context, AssetProvider provider) {
+  Navigator.of(context).push(
+    CupertinoPageRoute<void>(
+      builder: (BuildContext context) => _AddAssetPage(provider: provider),
+      fullscreenDialog: true,
+    ),
+  );
+}
+
+void _showAddRecordDialog(
+    BuildContext context, AssetProvider provider, Asset asset) {
+  String amount = '';
+
+  showCupertinoDialog(
+    context: context,
+    builder: (context) => CupertinoAlertDialog(
+      title: Text('Add Record for ${asset.name}'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const SizedBox(height: 16),
+          CupertinoTextField(
+            placeholder: 'Amount',
+            keyboardType: TextInputType.number,
+            onChanged: (value) => amount = value,
+          ),
+        ],
       ),
-    );
-  }
-
-  void _showAddRecordDialog(
-      BuildContext context, AssetProvider provider, Asset asset) {
-    String amount = '';
-
-    showCupertinoDialog(
-      context: context,
-      builder: (context) => CupertinoAlertDialog(
-        title: Text('Add Record for ${asset.name}'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const SizedBox(height: 16),
-            CupertinoTextField(
-              placeholder: 'Amount',
-              keyboardType: TextInputType.number,
-              onChanged: (value) => amount = value,
-            ),
-          ],
+      actions: [
+        CupertinoDialogAction(
+          child: const Text('Cancel'),
+          onPressed: () => Navigator.of(context).pop(),
         ),
-        actions: [
-          CupertinoDialogAction(
-            child: const Text('Cancel'),
-            onPressed: () => Navigator.of(context).pop(),
-          ),
-          CupertinoDialogAction(
-            child: const Text('Add'),
-            onPressed: () async {
-              if (amount.isNotEmpty) {
-                Navigator.of(context).pop();
-                final success = await provider.createAssetRecord(
-                  asset.id.toString(),
-                  DateTime.now(),
-                  double.tryParse(amount) ?? 0.0,
-                );
-                if (!success && context.mounted) {
-                  _showErrorDialog(context, 'Failed to add record.');
-                }
+        CupertinoDialogAction(
+          child: const Text('Add'),
+          onPressed: () async {
+            if (amount.isNotEmpty) {
+              Navigator.of(context).pop();
+              final success = await provider.createAssetRecord(
+                asset.id.toString(),
+                DateTime.now(),
+                double.tryParse(amount) ?? 0.0,
+              );
+              if (!success && context.mounted) {
+                _showErrorDialog(context, 'Failed to add record.');
               }
-            },
-          ),
-        ],
-      ),
-    );
-  }
+            }
+          },
+        ),
+      ],
+    ),
+  );
+}
 
-  void _showErrorDialog(BuildContext context, String message) {
-    showCupertinoDialog(
-      context: context,
-      builder: (context) => CupertinoAlertDialog(
-        title: const Text('Error'),
-        content: Text(message),
-        actions: [
-          CupertinoDialogAction(
-            child: const Text('OK'),
-            onPressed: () => Navigator.of(context).pop(),
-          ),
-        ],
-      ),
-    );
-  }
+void _showErrorDialog(BuildContext context, String message) {
+  showCupertinoDialog(
+    context: context,
+    builder: (context) => CupertinoAlertDialog(
+      title: const Text('Error'),
+      content: Text(message),
+      actions: [
+        CupertinoDialogAction(
+          child: const Text('OK'),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+      ],
+    ),
+  );
 }
 
 class _AddAssetPage extends StatefulWidget {

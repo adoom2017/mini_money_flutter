@@ -1,4 +1,5 @@
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
 import '../providers/user_provider.dart';
@@ -14,8 +15,46 @@ class SettingsScreen extends StatelessWidget {
         builder: (context, userProvider, child) {
           final user = userProvider.user;
           return CupertinoPageScaffold(
-            navigationBar: const CupertinoNavigationBar(
-              middle: Text('设置'),
+            backgroundColor: const Color(0xFFF8F9FA),
+            navigationBar: CupertinoNavigationBar(
+              backgroundColor:
+                  CupertinoColors.systemBackground.withOpacity(0.8),
+              middle: Container(
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF667EEA), Color(0xFF764BA2)],
+                    begin: Alignment.centerLeft,
+                    end: Alignment.centerRight,
+                  ),
+                  borderRadius: const BorderRadius.only(
+                    bottomLeft: Radius.circular(20),
+                    bottomRight: Radius.circular(20),
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF667EEA).withOpacity(0.3),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                margin: const EdgeInsets.symmetric(horizontal: 0, vertical: 0),
+                padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 0),
+                child: const SizedBox(
+                  width: double.infinity,
+                  height: 60,
+                  child: Center(
+                    child: Text(
+                      '⚙️ 设置',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
             ),
             child: SafeArea(
               child: userProvider.isLoading
@@ -25,108 +64,199 @@ class SettingsScreen extends StatelessWidget {
                       : CustomScrollView(
                           slivers: [
                             SliverToBoxAdapter(
-                              child: Column(
-                                children: [
-                                  const SizedBox(height: 40),
-                                  _buildAvatar(context, userProvider),
-                                  const SizedBox(height: 20),
-                                  Text(
-                                    user.username,
-                                    style: const TextStyle(
-                                      fontSize: 24,
-                                      fontWeight: FontWeight.bold,
-                                      color: CupertinoColors.label,
-                                    ),
+                              child: Container(
+                                margin:
+                                    const EdgeInsets.fromLTRB(16, 24, 16, 24),
+                                decoration: BoxDecoration(
+                                  gradient: const LinearGradient(
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                    colors: [
+                                      Color(0xFF667EEA),
+                                      Color(0xFF764BA2),
+                                    ],
                                   ),
-                                  const SizedBox(height: 8),
-                                  Text(
-                                    user.email,
-                                    style: const TextStyle(
-                                      fontSize: 16,
-                                      color: CupertinoColors.secondaryLabel,
+                                  borderRadius: BorderRadius.circular(20),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: const Color(0xFF667EEA)
+                                          .withOpacity(0.3),
+                                      spreadRadius: 0,
+                                      blurRadius: 20,
+                                      offset: const Offset(0, 8),
                                     ),
-                                  ),
-                                  const SizedBox(height: 40),
-                                ],
-                              ),
-                            ),
-                            SliverToBoxAdapter(
-                              child: CupertinoFormSection.insetGrouped(
-                                header: const Text('账户设置'),
-                                children: [
-                                  CupertinoFormRow(
-                                    prefix: const Icon(CupertinoIcons.lock,
-                                        color: CupertinoColors.systemGrey),
-                                    child: GestureDetector(
-                                      onTap: () => _showPasswordDialog(
-                                          context, userProvider),
-                                      child: const Row(
-                                        children: [
-                                          Text('修改密码'),
-                                          Spacer(),
-                                          Icon(CupertinoIcons.forward,
-                                              color:
-                                                  CupertinoColors.systemGrey),
-                                        ],
+                                  ],
+                                ),
+                                child: Padding(
+                                  padding: const EdgeInsets.all(24),
+                                  child: Column(
+                                    children: [
+                                      _buildAvatar(context, userProvider),
+                                      const SizedBox(height: 20),
+                                      Text(
+                                        user.username,
+                                        style: const TextStyle(
+                                          fontSize: 24,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.white,
+                                        ),
                                       ),
-                                    ),
-                                  ),
-                                  CupertinoFormRow(
-                                    prefix: const Icon(CupertinoIcons.mail,
-                                        color: CupertinoColors.systemGrey),
-                                    child: GestureDetector(
-                                      onTap: () => _showEmailDialog(
-                                          context, userProvider),
-                                      child: const Row(
-                                        children: [
-                                          Text('修改邮箱'),
-                                          Spacer(),
-                                          Icon(CupertinoIcons.forward,
-                                              color:
-                                                  CupertinoColors.systemGrey),
-                                        ],
+                                      const SizedBox(height: 8),
+                                      Text(
+                                        user.email,
+                                        style: const TextStyle(
+                                          fontSize: 16,
+                                          color: Colors.white70,
+                                        ),
                                       ),
-                                    ),
+                                      const SizedBox(height: 16),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 12,
+                                          vertical: 6,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: Colors.white.withOpacity(0.2),
+                                          borderRadius:
+                                              BorderRadius.circular(16),
+                                        ),
+                                        child: const Text(
+                                          '个人资料',
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            color: Colors.white70,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
                                   ),
-                                ],
+                                ),
                               ),
                             ),
                             SliverToBoxAdapter(
                               child: Padding(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 20, vertical: 20),
-                                child: CupertinoButton.filled(
-                                  onPressed: () {
-                                    showCupertinoDialog(
-                                      context: context,
-                                      builder: (context) =>
-                                          CupertinoAlertDialog(
-                                        title: const Text('退出登录'),
-                                        content: const Text('确定要退出登录吗？'),
-                                        actions: [
-                                          CupertinoDialogAction(
-                                            onPressed: () =>
-                                                Navigator.of(context).pop(),
-                                            child: const Text('取消'),
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 16),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Padding(
+                                      padding:
+                                          EdgeInsets.only(left: 4, bottom: 12),
+                                      child: Row(
+                                        children: [
+                                          Icon(
+                                            CupertinoIcons.settings,
+                                            size: 18,
+                                            color: Color(0xFF667EEA),
                                           ),
-                                          CupertinoDialogAction(
-                                            isDestructiveAction: true,
-                                            onPressed: () {
-                                              Navigator.of(context).pop();
-                                              Provider.of<AuthProvider>(context,
-                                                      listen: false)
-                                                  .logout();
-                                            },
-                                            child: const Text('退出'),
+                                          SizedBox(width: 8),
+                                          Text(
+                                            '账户设置',
+                                            style: TextStyle(
+                                              fontSize: 18,
+                                              fontWeight: FontWeight.w600,
+                                              color: CupertinoColors.label,
+                                            ),
                                           ),
                                         ],
                                       ),
-                                    );
-                                  },
-                                  child: const Text(
-                                    '退出登录',
-                                    style:
-                                        TextStyle(color: CupertinoColors.white),
+                                    ),
+                                    _buildSettingCard(
+                                      icon: CupertinoIcons.lock_shield,
+                                      iconColor: const Color(0xFF667EEA),
+                                      title: '修改密码',
+                                      subtitle: '更改您的登录密码',
+                                      onTap: () => _showPasswordDialog(
+                                          context, userProvider),
+                                    ),
+                                    const SizedBox(height: 12),
+                                    _buildSettingCard(
+                                      icon: CupertinoIcons.mail,
+                                      iconColor: const Color(0xFF764BA2),
+                                      title: '修改邮箱',
+                                      subtitle: '更新您的邮箱地址',
+                                      onTap: () => _showEmailDialog(
+                                          context, userProvider),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            SliverToBoxAdapter(
+                              child: Padding(
+                                padding:
+                                    const EdgeInsets.fromLTRB(16, 32, 16, 32),
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    gradient: const LinearGradient(
+                                      colors: [
+                                        CupertinoColors.systemRed,
+                                        Color(0xFFE53E3E),
+                                      ],
+                                    ),
+                                    borderRadius: BorderRadius.circular(16),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: CupertinoColors.systemRed
+                                            .withOpacity(0.3),
+                                        spreadRadius: 0,
+                                        blurRadius: 12,
+                                        offset: const Offset(0, 4),
+                                      ),
+                                    ],
+                                  ),
+                                  child: CupertinoButton(
+                                    padding: const EdgeInsets.symmetric(
+                                        vertical: 16),
+                                    onPressed: () {
+                                      showCupertinoDialog(
+                                        context: context,
+                                        builder: (context) =>
+                                            CupertinoAlertDialog(
+                                          title: const Text('退出登录'),
+                                          content: const Text('确定要退出登录吗？'),
+                                          actions: [
+                                            CupertinoDialogAction(
+                                              onPressed: () =>
+                                                  Navigator.of(context).pop(),
+                                              child: const Text('取消'),
+                                            ),
+                                            CupertinoDialogAction(
+                                              isDestructiveAction: true,
+                                              onPressed: () {
+                                                Navigator.of(context).pop();
+                                                Provider.of<AuthProvider>(
+                                                        context,
+                                                        listen: false)
+                                                    .logout();
+                                              },
+                                              child: const Text('退出'),
+                                            ),
+                                          ],
+                                        ),
+                                      );
+                                    },
+                                    child: const Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        Icon(
+                                          CupertinoIcons.square_arrow_right,
+                                          color: Colors.white,
+                                          size: 20,
+                                        ),
+                                        SizedBox(width: 8),
+                                        Text(
+                                          '退出登录',
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
                                   ),
                                 ),
                               ),
@@ -146,12 +276,21 @@ class SettingsScreen extends StatelessWidget {
       child: Stack(
         children: [
           Container(
-            width: 120,
-            height: 120,
+            width: 100,
+            height: 100,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: CupertinoColors.systemGrey5,
-              border: Border.all(color: CupertinoColors.systemGrey4, width: 2),
+              color: Colors.white.withOpacity(0.2),
+              border:
+                  Border.all(color: Colors.white.withOpacity(0.3), width: 3),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  spreadRadius: 2,
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
             ),
             child: (avatarUrl != null && avatarUrl.isNotEmpty)
                 ? ClipOval(
@@ -160,29 +299,37 @@ class SettingsScreen extends StatelessWidget {
                       fit: BoxFit.cover,
                       errorBuilder: (context, error, stackTrace) {
                         return const Icon(CupertinoIcons.person_fill,
-                            size: 60, color: CupertinoColors.systemGrey);
+                            size: 50, color: Colors.white70);
                       },
                     ),
                   )
                 : const Icon(CupertinoIcons.person_fill,
-                    size: 60, color: CupertinoColors.systemGrey),
+                    size: 50, color: Colors.white70),
           ),
           Positioned(
-            bottom: 0,
-            right: 0,
+            bottom: -2,
+            right: -2,
             child: GestureDetector(
               onTap: () => provider.pickAndUpdateAvatar(),
               child: Container(
-                width: 36,
-                height: 36,
-                decoration: const BoxDecoration(
-                  color: CupertinoColors.systemBlue,
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(
+                  color: Colors.white,
                   shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      spreadRadius: 1,
+                      blurRadius: 4,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
                 ),
                 child: const Icon(
-                  CupertinoIcons.camera,
-                  color: CupertinoColors.white,
-                  size: 18,
+                  CupertinoIcons.camera_fill,
+                  color: Color(0xFF667EEA),
+                  size: 16,
                 ),
               ),
             ),
@@ -330,6 +477,90 @@ class SettingsScreen extends StatelessWidget {
             child: const Text('更新'),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildSettingCard({
+    required IconData icon,
+    required Color iconColor,
+    required String title,
+    required String subtitle,
+    required VoidCallback onTap,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: CupertinoColors.systemBackground,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: CupertinoColors.separator.withOpacity(0.2),
+            spreadRadius: 0,
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        iconColor.withOpacity(0.1),
+                        iconColor.withOpacity(0.2),
+                      ],
+                    ),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(
+                    icon,
+                    color: iconColor,
+                    size: 24,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: CupertinoColors.label,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        subtitle,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          color: CupertinoColors.secondaryLabel,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const Icon(
+                  CupertinoIcons.chevron_right,
+                  color: CupertinoColors.systemGrey,
+                  size: 16,
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }

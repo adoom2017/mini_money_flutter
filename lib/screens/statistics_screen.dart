@@ -21,15 +21,16 @@ class StatisticsScreen extends StatelessWidget {
               backgroundColor: Colors.white.withOpacity(0.95),
               border: null,
               middle: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
                     colors: [Color(0xFF667EEA), Color(0xFF764BA2)],
                     begin: Alignment.centerLeft,
                     end: Alignment.centerRight,
                   ),
-                  borderRadius: BorderRadius.circular(20),
+                  borderRadius: const BorderRadius.only(
+                    bottomLeft: Radius.circular(20),
+                    bottomRight: Radius.circular(20),
+                  ),
                   boxShadow: [
                     BoxShadow(
                       color: const Color(0xFF667EEA).withOpacity(0.3),
@@ -38,24 +39,21 @@ class StatisticsScreen extends StatelessWidget {
                     ),
                   ],
                 ),
-                child: const Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      CupertinoIcons.chart_bar_alt_fill,
-                      color: Colors.white,
-                      size: 16,
-                    ),
-                    SizedBox(width: 8),
-                    Text(
-                      '统计分析',
+                margin: const EdgeInsets.symmetric(horizontal: 0, vertical: 0),
+                padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 0),
+                child: const SizedBox(
+                  width: double.infinity,
+                  height: 60,
+                  child: Center(
+                    child: Text(
+                      '📊 统计分析',
                       style: TextStyle(
                         color: Colors.white,
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
-                  ],
+                  ),
                 ),
               ),
               trailing: GestureDetector(

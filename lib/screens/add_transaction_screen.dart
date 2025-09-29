@@ -1,5 +1,7 @@
 import 'dart:convert';
+import 'dart:ui';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../api/api_service.dart';
@@ -217,17 +219,25 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
               ),
               // 日期时间选择器
               Expanded(
-                child: CupertinoDatePicker(
-                  mode: CupertinoDatePickerMode.dateAndTime,
-                  initialDateTime: _selectedDate,
-                  maximumDate: DateTime.now(),
-                  minimumDate:
-                      DateTime.now().subtract(const Duration(days: 365)),
-                  onDateTimeChanged: (DateTime newDateTime) {
-                    setState(() {
-                      _selectedDate = newDateTime;
-                    });
-                  },
+                child: ScrollConfiguration(
+                  behavior: ScrollConfiguration.of(context).copyWith(
+                    dragDevices: {
+                      PointerDeviceKind.touch,
+                      PointerDeviceKind.mouse,
+                    },
+                  ),
+                  child: CupertinoDatePicker(
+                    mode: CupertinoDatePickerMode.dateAndTime,
+                    initialDateTime: _selectedDate,
+                    maximumDate: DateTime.now(),
+                    minimumDate:
+                        DateTime.now().subtract(const Duration(days: 365)),
+                    onDateTimeChanged: (DateTime newDateTime) {
+                      setState(() {
+                        _selectedDate = newDateTime;
+                      });
+                    },
+                  ),
                 ),
               ),
             ],
@@ -330,14 +340,20 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
   Widget _buildTopBar() {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: const BoxDecoration(
-        color: CupertinoColors.systemBackground,
-        border: Border(
-          bottom: BorderSide(
-            color: CupertinoColors.separator,
-            width: 0.5,
-          ),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFF667EEA), Color(0xFF764BA2)],
+          begin: Alignment.centerLeft,
+          end: Alignment.centerRight,
         ),
+        borderRadius: const BorderRadius.vertical(bottom: Radius.circular(20)),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF667EEA).withOpacity(0.2),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -345,26 +361,27 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
           CupertinoButton(
             padding: EdgeInsets.zero,
             onPressed: _handleNavigation,
-            child: const Text(
-              '取消',
-              style: TextStyle(
-                color: CupertinoColors.systemBlue,
-                fontSize: 16,
-              ),
+            child: const Row(
+              children: [
+                Icon(CupertinoIcons.left_chevron,
+                    color: Colors.white, size: 18),
+              ],
             ),
           ),
-          CupertinoButton(
-            padding: EdgeInsets.zero,
-            child: const Text(
-              '默认账本',
-              style: TextStyle(
-                color: CupertinoColors.systemBlue,
-                fontSize: 16,
-              ),
+          const Expanded(
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(CupertinoIcons.money_dollar_circle,
+                    color: Colors.white, size: 22),
+                SizedBox(width: 8),
+                Text('添加交易',
+                    style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold)),
+              ],
             ),
-            onPressed: () {
-              // TODO: 实现账本选择
-            },
           ),
         ],
       ),
@@ -376,25 +393,48 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
       margin: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: CupertinoColors.systemBackground,
-        borderRadius: BorderRadius.circular(22),
+        borderRadius: BorderRadius.circular(8),
+        boxShadow: [
+          BoxShadow(
+            color: CupertinoColors.separator.withOpacity(0.1),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: CupertinoSlidingSegmentedControl<String>(
         groupValue: _type,
         children: const {
           'expense': Padding(
             padding: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-            child: Text('支出'),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(CupertinoIcons.minus_circle_fill,
+                    color: CupertinoColors.systemRed, size: 18),
+                SizedBox(width: 6),
+                Text('支出'),
+              ],
+            ),
           ),
           'income': Padding(
             padding: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-            child: Text('收入'),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(CupertinoIcons.plus_circle_fill,
+                    color: CupertinoColors.systemGreen, size: 18),
+                SizedBox(width: 6),
+                Text('收入'),
+              ],
+            ),
           ),
         },
         onValueChanged: (value) {
           if (value != null) {
             setState(() {
               _type = value;
-              _selectedCategoryKey = null; // 切换类型时清空选中分类
+              _selectedCategoryKey = null;
             });
           }
         },
@@ -408,6 +448,13 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
       decoration: BoxDecoration(
         color: CupertinoColors.systemBackground,
         borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: CupertinoColors.separator.withOpacity(0.1),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: GridView.builder(
         padding: const EdgeInsets.all(16),
@@ -421,7 +468,9 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
         itemBuilder: (context, index) {
           final category = _currentCategories[index];
           final isSelected = _selectedCategoryKey == category.key;
-
+          final color = _type == 'expense'
+              ? CupertinoColors.systemRed
+              : CupertinoColors.systemGreen;
           return GestureDetector(
             onTap: () {
               setState(() {
@@ -435,16 +484,26 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                   width: 48,
                   height: 48,
                   decoration: BoxDecoration(
-                    color: isSelected
-                        ? CupertinoColors.systemRed
-                        : CupertinoColors.systemGrey6,
+                    gradient: isSelected
+                        ? LinearGradient(
+                            colors: [color, color.withOpacity(0.7)])
+                        : LinearGradient(colors: [
+                            CupertinoColors.systemGrey6,
+                            CupertinoColors.systemGrey5
+                          ]),
                     shape: BoxShape.circle,
+                    boxShadow: isSelected
+                        ? [
+                            BoxShadow(
+                                color: color.withOpacity(0.2),
+                                blurRadius: 8,
+                                offset: Offset(0, 2))
+                          ]
+                        : [],
                   ),
                   child: Icon(
                     CategoryUtils.getCategoryIcon(category.key),
-                    color: isSelected
-                        ? CupertinoColors.white
-                        : CupertinoColors.systemGrey,
+                    color: isSelected ? Colors.white : color,
                     size: 24,
                   ),
                 ),
@@ -453,9 +512,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                   CategoryUtils.getCategoryName(category.key),
                   style: TextStyle(
                     fontSize: 12,
-                    color: isSelected
-                        ? CupertinoColors.systemRed
-                        : CupertinoColors.label,
+                    color: isSelected ? color : CupertinoColors.label,
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -471,9 +528,14 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     return Container(
       decoration: const BoxDecoration(
         color: CupertinoColors.systemBackground,
-        borderRadius: BorderRadius.vertical(
-          top: Radius.circular(20),
-        ),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        boxShadow: [
+          BoxShadow(
+            color: CupertinoColors.separator,
+            blurRadius: 8,
+            offset: Offset(0, 2),
+          ),
+        ],
       ),
       child: Column(
         children: [
@@ -483,12 +545,22 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
+                Icon(
+                  CupertinoIcons.money_dollar_circle,
+                  color: _type == 'expense'
+                      ? CupertinoColors.systemRed
+                      : CupertinoColors.systemGreen,
+                  size: 28,
+                ),
+                const SizedBox(width: 8),
                 Text(
                   '¥$_displayAmount',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 36,
                     fontWeight: FontWeight.w300,
-                    color: CupertinoColors.systemRed,
+                    color: _type == 'expense'
+                        ? CupertinoColors.systemRed
+                        : CupertinoColors.systemGreen,
                   ),
                 ),
               ],
@@ -499,7 +571,6 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Row(
               children: [
-                // 可点击的日期时间选择区域
                 Expanded(
                   child: GestureDetector(
                     onTap: _showDateTimePicker,
@@ -507,16 +578,16 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                       padding: const EdgeInsets.symmetric(vertical: 8),
                       child: Row(
                         children: [
-                          const Icon(
+                          Icon(
                             CupertinoIcons.calendar,
-                            color: CupertinoColors.systemGrey,
-                            size: 16,
+                            color: Color(0xFFFF9800),
+                            size: 18,
                           ),
                           const SizedBox(width: 8),
                           Text(
                             DateFormat('MM/dd HH:mm').format(_selectedDate),
                             style: const TextStyle(
-                              color: CupertinoColors.systemGrey,
+                              color: CupertinoColors.label,
                               fontSize: 14,
                             ),
                           ),
@@ -525,13 +596,18 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                     ),
                   ),
                 ),
-                // 备注区域
                 GestureDetector(
                   onTap: _showDescriptionInput,
                   child: Container(
                     padding: const EdgeInsets.symmetric(vertical: 8),
                     child: Row(
                       children: [
+                        Icon(
+                          CupertinoIcons.pencil,
+                          color: Color(0xFF667EEA),
+                          size: 18,
+                        ),
+                        const SizedBox(width: 8),
                         Text(
                           _description.isEmpty ? '点击填写备注' : _description,
                           style: TextStyle(
@@ -542,12 +618,6 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                        ),
-                        const SizedBox(width: 8),
-                        const Icon(
-                          CupertinoIcons.pencil,
-                          color: CupertinoColors.systemGrey,
-                          size: 16,
                         ),
                       ],
                     ),
@@ -590,7 +660,6 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
   Widget _buildKeyboardButton(String key) {
     Widget child;
     VoidCallback? onPressed;
-
     switch (key) {
       case '+×':
       case '-÷':
@@ -611,7 +680,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
             ),
           ),
         );
-        onPressed = null; // 暂不实现
+        onPressed = null;
         break;
       case '⌫':
         child = Container(
@@ -623,7 +692,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
           child: const Center(
             child: Icon(
               CupertinoIcons.delete_left,
-              color: CupertinoColors.label,
+              color: CupertinoColors.systemRed,
             ),
           ),
         );
@@ -633,7 +702,9 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
         child = Container(
           height: 50,
           decoration: BoxDecoration(
-            color: CupertinoColors.systemRed,
+            gradient: const LinearGradient(
+              colors: [Color(0xFF667EEA), Color(0xFF764BA2)],
+            ),
             borderRadius: BorderRadius.circular(8),
           ),
           child: const Center(
@@ -641,7 +712,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
               '完成',
               style: TextStyle(
                 fontSize: 16,
-                color: CupertinoColors.white,
+                color: Colors.white,
                 fontWeight: FontWeight.w500,
               ),
             ),
@@ -707,7 +778,6 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
           onPressed = null;
         }
     }
-
     return Expanded(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 4),

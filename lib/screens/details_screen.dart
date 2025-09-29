@@ -41,15 +41,16 @@ class _DetailsScreenState extends State<DetailsScreen> {
           return CupertinoPageScaffold(
             navigationBar: CupertinoNavigationBar(
               middle: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
                     colors: [Color(0xFF667EEA), Color(0xFF764BA2)],
                     begin: Alignment.centerLeft,
                     end: Alignment.centerRight,
                   ),
-                  borderRadius: BorderRadius.circular(20),
+                  borderRadius: const BorderRadius.only(
+                    bottomLeft: Radius.circular(20),
+                    bottomRight: Radius.circular(20),
+                  ),
                   boxShadow: [
                     BoxShadow(
                       color: const Color(0xFF667EEA).withOpacity(0.3),
@@ -58,12 +59,20 @@ class _DetailsScreenState extends State<DetailsScreen> {
                     ),
                   ],
                 ),
-                child: const Text(
-                  '💰 交易明细',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
+                margin: const EdgeInsets.symmetric(horizontal: 0, vertical: 0),
+                padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 0),
+                child: const SizedBox(
+                  width: double.infinity,
+                  height: 60,
+                  child: Center(
+                    child: Text(
+                      '📋 交易详情',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
                   ),
                 ),
               ),

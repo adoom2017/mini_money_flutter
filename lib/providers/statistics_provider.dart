@@ -349,7 +349,7 @@ class StatisticsProvider with ChangeNotifier {
       children: years.map((year) {
         return Center(
           child: Text(
-            '${year}年',
+            '$year年',
             style: const TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w500,
