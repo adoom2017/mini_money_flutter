@@ -85,18 +85,18 @@ class CustomCalendar extends StatelessWidget {
   Widget _buildWeekdayHeader() {
     const weekdays = ['日', '一', '二', '三', '四', '五', '六'];
     return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: weekdays.map((weekday) {
-        return Expanded(
-          child: Container(
-            padding: const EdgeInsets.symmetric(vertical: 8),
-            child: Text(
-              weekday,
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-                color: CupertinoColors.secondaryLabel,
-              ),
+        return Container(
+          width: 47, // 与日期单元格相同的宽度
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          child: Text(
+            weekday,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+              color: CupertinoColors.secondaryLabel,
             ),
           ),
         );
@@ -173,8 +173,8 @@ class CustomCalendar extends StatelessWidget {
     }
 
     return Container(
-      width: 45,
-      height: 45,
+      width: 47, // 与星期标题保持一致的宽度
+      height: 47,
       margin: const EdgeInsets.all(1),
       child: GestureDetector(
         onTap: isCurrentMonth ? () => onDaySelected(day) : null,
