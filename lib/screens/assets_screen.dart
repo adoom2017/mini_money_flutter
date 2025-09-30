@@ -56,23 +56,6 @@ class AssetsScreen extends StatelessWidget {
                   ),
                 ),
               ),
-              trailing: Container(
-                decoration: BoxDecoration(
-                  color: const Color(0xFF1976D2).withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: CupertinoButton(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  minSize: 0,
-                  child: const Icon(
-                    CupertinoIcons.refresh,
-                    color: Color(0xFF1976D2),
-                    size: 18,
-                  ),
-                  onPressed: () => provider.fetchData(),
-                ),
-              ),
             ),
             child: SafeArea(
               child: provider.isLoading

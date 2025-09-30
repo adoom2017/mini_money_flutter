@@ -226,7 +226,7 @@ class AssetDetailScreen extends StatelessWidget {
                   getTitlesWidget: (value, meta) {
                     final index = value.toInt();
                     if (index >= 0 && index < sortedRecords.length) {
-                      final date = sortedRecords[index].date;
+                      final date = sortedRecords[index].date.toLocal();
                       return Padding(
                         padding: const EdgeInsets.only(top: 8),
                         child: Text(
@@ -292,7 +292,7 @@ class AssetDetailScreen extends StatelessWidget {
                     if (index >= 0 && index < sortedRecords.length) {
                       final record = sortedRecords[index];
                       return LineTooltipItem(
-                        '${DateFormat('yyyy/MM/dd').format(record.date)}\n',
+                        '${DateFormat('yyyy/MM/dd').format(record.date.toLocal())}\n',
                         const TextStyle(
                           color: CupertinoColors.white,
                           fontWeight: FontWeight.bold,

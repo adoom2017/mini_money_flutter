@@ -4,7 +4,26 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../utils/app_logger.dart';
 
 class ApiService {
-  final String _baseUrl = 'http://127.0.0.1:8080/api';
+  static String _baseUrl = 'http://127.0.0.1:8080/api';
+
+  /// 持久化并设置 baseUrl，调用后所有请求将使用新的 base URL
+  static Future<void> setBaseUrl(String url) async {
+    _baseUrl = url;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('api_base_url', url);
+  }
+
+  /// 从 SharedPreferences 中加载已保存的 baseUrl（如果存在）
+  static Future<void> loadBaseUrl() async {
+    final prefs = await SharedPreferences.getInstance();
+    final url = prefs.getString('api_base_url');
+    if (url != null && url.isNotEmpty) {
+      _baseUrl = url;
+    }
+  }
+
+  /// 公开读取当前 baseUrl（只读）
+  static String get baseUrl => _baseUrl;
 
   // 401错误回调函数
   static void Function()? _onUnauthorized;

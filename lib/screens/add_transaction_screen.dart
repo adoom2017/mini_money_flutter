@@ -487,7 +487,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                     gradient: isSelected
                         ? LinearGradient(
                             colors: [color, color.withOpacity(0.7)])
-                        : LinearGradient(colors: [
+                        : const LinearGradient(colors: [
                             CupertinoColors.systemGrey6,
                             CupertinoColors.systemGrey5
                           ]),
@@ -497,7 +497,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                             BoxShadow(
                                 color: color.withOpacity(0.2),
                                 blurRadius: 8,
-                                offset: Offset(0, 2))
+                                offset: const Offset(0, 2))
                           ]
                         : [],
                   ),
@@ -578,7 +578,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                       padding: const EdgeInsets.symmetric(vertical: 8),
                       child: Row(
                         children: [
-                          Icon(
+                          const Icon(
                             CupertinoIcons.calendar,
                             color: Color(0xFFFF9800),
                             size: 18,
@@ -602,7 +602,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                     padding: const EdgeInsets.symmetric(vertical: 8),
                     child: Row(
                       children: [
-                        Icon(
+                        const Icon(
                           CupertinoIcons.pencil,
                           color: Color(0xFF667EEA),
                           size: 18,

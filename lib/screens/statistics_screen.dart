@@ -56,47 +56,7 @@ class StatisticsScreen extends StatelessWidget {
                   ),
                 ),
               ),
-              trailing: GestureDetector(
-                onTap: () => provider.selectMonth(context),
-                child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [Color(0xFF6C63FF), Color(0xFF3F51B5)],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: const Color(0xFF6C63FF).withOpacity(0.3),
-                        blurRadius: 8,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        provider.statisticsMode == 'yearly'
-                            ? DateFormat('yyyy年').format(provider.selectedDate)
-                            : DateFormat('yyyy.MM')
-                                .format(provider.selectedDate),
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      const SizedBox(width: 6),
-                      const Icon(CupertinoIcons.calendar,
-                          size: 16, color: Colors.white),
-                    ],
-                  ),
-                ),
-              ),
+              // trailing removed: date picker moved into page body
             ),
             child: Container(
               decoration: const BoxDecoration(
@@ -160,9 +120,57 @@ class StatisticsScreen extends StatelessWidget {
     );
   }
 
+  Widget _buildDateSelector(BuildContext context, StatisticsProvider provider) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      width: double.infinity,
+      child: GestureDetector(
+        onTap: () => provider.selectMonth(context),
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [Color(0xFF6C63FF), Color(0xFF3F51B5)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF6C63FF).withOpacity(0.3),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                provider.statisticsMode == 'yearly'
+                    ? DateFormat('yyyy年').format(provider.selectedDate)
+                    : DateFormat('yyyy.MM').format(provider.selectedDate),
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(width: 6),
+              const Icon(CupertinoIcons.calendar,
+                  size: 16, color: Colors.white),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildStatisticsBody(
       BuildContext context, StatisticsProvider provider) {
     if (provider.summary == null) {
+      final isYearly = provider.statisticsMode == 'yearly';
       return Center(
         child: Container(
           margin: const EdgeInsets.all(32),
@@ -207,9 +215,9 @@ class StatisticsScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 16),
-              const Text(
-                '本月暂无数据',
-                style: TextStyle(
+              Text(
+                isYearly ? '本年暂无数据' : '本月暂无数据',
+                style: const TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w600,
                   color: Color(0xFF4A5568),
@@ -238,8 +246,11 @@ class StatisticsScreen extends StatelessWidget {
       children: [
         // 添加统计模式切换控件
         _buildModeToggle(context, provider),
+        const SizedBox(height: 12),
+        // 日期选择器：放在标签页（模式切换）下面
+        _buildDateSelector(context, provider),
         const SizedBox(height: 16),
-        _buildSummaryCard(context, provider.summary!, currencyFormat),
+        _buildSummaryCard(context, provider, provider.summary!, currencyFormat),
         const SizedBox(height: 24),
         if (provider.statisticsMode == 'yearly')
           _buildYearlyChart(context, provider)
@@ -254,8 +265,8 @@ class StatisticsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildSummaryCard(
-      BuildContext context, StatisticsSummary summary, NumberFormat format) {
+  Widget _buildSummaryCard(BuildContext context, StatisticsProvider provider,
+      StatisticsSummary summary, NumberFormat format) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
@@ -304,7 +315,7 @@ class StatisticsScreen extends StatelessWidget {
                 ),
                 const SizedBox(width: 16),
                 Text(
-                  '月度财务概览',
+                  provider.statisticsMode == 'yearly' ? '年度财务概览' : '月度财务概览',
                   style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.w700,

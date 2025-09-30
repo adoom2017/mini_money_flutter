@@ -14,6 +14,7 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
+  String _apiBaseUrl = ApiService.baseUrl;
   final _formKey = GlobalKey<FormState>();
   final _apiService = ApiService();
   bool _isLogin = true;
@@ -22,6 +23,58 @@ class _LoginScreenState extends State<LoginScreen> {
   String _username = '';
   String _password = '';
   String _email = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadApiBaseUrl();
+  }
+
+  Future<void> _loadApiBaseUrl() async {
+    await ApiService.loadBaseUrl();
+    setState(() {
+      _apiBaseUrl = ApiService.baseUrl;
+    });
+  }
+
+  void _showApiConfigDialog() {
+    final controller = TextEditingController(text: _apiBaseUrl);
+    showCupertinoDialog(
+      context: context,
+      builder: (context) => CupertinoAlertDialog(
+        title: const Text('配置后端地址'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(height: 8),
+            CupertinoTextField(
+              controller: controller,
+              placeholder: '例如: http://127.0.0.1:8080/api',
+            ),
+          ],
+        ),
+        actions: [
+          CupertinoDialogAction(
+            child: const Text('取消'),
+            onPressed: () => Navigator.of(context).pop(),
+          ),
+          CupertinoDialogAction(
+            child: const Text('保存'),
+            onPressed: () async {
+              final url = controller.text.trim();
+              if (url.isNotEmpty) {
+                await ApiService.setBaseUrl(url);
+                setState(() {
+                  _apiBaseUrl = ApiService.baseUrl;
+                });
+              }
+              Navigator.of(context).pop();
+            },
+          ),
+        ],
+      ),
+    );
+  }
 
   void _trySubmit() async {
     final isValid = _formKey.currentState?.validate();
@@ -39,7 +92,7 @@ class _LoginScreenState extends State<LoginScreen> {
         final response = await _apiService.login(_username, _password);
         if (response.statusCode == 200) {
           final data = jsonDecode(response.body);
-          if (context.mounted) return;
+          if (!context.mounted) return;
           await Provider.of<AuthProvider>(context, listen: false)
               .login(data['token']);
         } else {
@@ -215,6 +268,17 @@ class _LoginScreenState extends State<LoginScreen> {
                               color: CupertinoColors.systemBlue),
                         ),
                       ),
+                      const SizedBox(height: 12),
+                      CupertinoButton(
+                        onPressed: _showApiConfigDialog,
+                        child: const Text('配置后端地址',
+                            style:
+                                TextStyle(color: CupertinoColors.activeBlue)),
+                      ),
+                      const SizedBox(height: 6),
+                      Text('当前API: $_apiBaseUrl',
+                          style: const TextStyle(
+                              fontSize: 12, color: CupertinoColors.systemGrey)),
                     ],
                   ),
               ],

@@ -76,22 +76,27 @@ class _DetailsScreenState extends State<DetailsScreen> {
                   ),
                 ),
               ),
-              trailing: CupertinoButton(
-                padding: EdgeInsets.zero,
-                child: const Icon(CupertinoIcons.refresh),
-                onPressed: () => provider.fetchTransactions(),
-              ),
             ),
             child: Stack(
               children: [
-                SafeArea(
-                  child: Padding(
-                    padding: const EdgeInsets.only(top: 16), // 添加顶部padding
+                Padding(
+                  padding: const EdgeInsets.only(top: 16), // 添加顶部padding
+                  child: SafeArea(
                     child: provider.isLoading
                         ? const Center(
                             child: CupertinoActivityIndicator(radius: 12),
                           )
-                        : _buildTransactionListView(context, provider),
+                        : CustomScrollView(
+                            controller: _scrollController,
+                            slivers: [
+                              CupertinoSliverRefreshControl(
+                                onRefresh: () async {
+                                  await provider.fetchTransactions();
+                                },
+                              ),
+                              ..._buildTransactionSlivers(context, provider),
+                            ],
+                          ),
                   ),
                 ),
                 // 浮动按钮
@@ -115,46 +120,55 @@ class _DetailsScreenState extends State<DetailsScreen> {
     );
   }
 
-  Widget _buildTransactionListView(
+  List<Widget> _buildEmptySliver() {
+    return [
+      SliverFillRemaining(
+        hasScrollBody: false,
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                width: 100,
+                height: 100,
+                decoration: BoxDecoration(
+                  color: CupertinoColors.systemBlue.withOpacity(0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  CupertinoIcons.doc_text,
+                  size: 50,
+                  color: CupertinoColors.systemBlue,
+                ),
+              ),
+              const SizedBox(height: 20),
+              const Text(
+                '暂无交易记录',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  color: CupertinoColors.label,
+                ),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                '开始记录您的第一笔交易吧！',
+                style: TextStyle(
+                  fontSize: 16,
+                  color: CupertinoColors.placeholderText,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    ];
+  }
+
+  List<Widget> _buildTransactionSlivers(
       BuildContext context, TransactionProvider provider) {
     if (provider.transactions.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              width: 100,
-              height: 100,
-              decoration: BoxDecoration(
-                color: CupertinoColors.systemBlue.withOpacity(0.1),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                CupertinoIcons.doc_text,
-                size: 50,
-                color: CupertinoColors.systemBlue,
-              ),
-            ),
-            const SizedBox(height: 20),
-            const Text(
-              '暂无交易记录',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-                color: CupertinoColors.label,
-              ),
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              '开始记录您的第一笔交易吧！',
-              style: TextStyle(
-                fontSize: 16,
-                color: CupertinoColors.placeholderText,
-              ),
-            ),
-          ],
-        ),
-      );
+      return _buildEmptySliver();
     }
 
     // 按日期分组交易
@@ -171,21 +185,19 @@ class _DetailsScreenState extends State<DetailsScreen> {
     final sortedDates = groupedTransactions.keys.toList()
       ..sort((a, b) => b.compareTo(a));
 
-    return CupertinoScrollbar(
-      controller: _scrollController,
-      child: ListView.builder(
-        controller: _scrollController,
-        padding: const EdgeInsets.only(bottom: 100),
-        itemCount: sortedDates.length,
-        itemBuilder: (context, index) {
-          final dateKey = sortedDates[index];
-          final transactions = groupedTransactions[dateKey]!;
-          final date = DateTime.parse(dateKey);
-
-          return _buildDateGroup(context, date, transactions, provider);
-        },
+    return [
+      SliverList(
+        delegate: SliverChildBuilderDelegate(
+          (context, index) {
+            final dateKey = sortedDates[index];
+            final transactions = groupedTransactions[dateKey]!;
+            final date = DateTime.parse(dateKey);
+            return _buildDateGroup(context, date, transactions, provider);
+          },
+          childCount: sortedDates.length,
+        ),
       ),
-    );
+    ];
   }
 
   Widget _buildDateGroup(BuildContext context, DateTime date,
@@ -460,7 +472,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
                     ),
                     const SizedBox(width: 4),
                     Text(
-                      DateFormat('HH:mm').format(transaction.date),
+                      DateFormat('HH:mm').format(transaction.date.toLocal()),
                       style: const TextStyle(
                         fontSize: 13,
                         color: CupertinoColors.placeholderText,

@@ -5,6 +5,7 @@ import 'package:flutter/gestures.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../providers/home_provider.dart';
+import '../providers/auth_provider.dart';
 import '../widgets/custom_calendar.dart';
 import '../models/transaction.dart';
 import '../api/api_service.dart';
@@ -624,7 +625,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                     const SizedBox(width: 4),
                     Text(
-                      DateFormat('HH:mm').format(transaction.date),
+                      DateFormat('HH:mm').format(transaction.date.toLocal()),
                       style: TextStyle(
                         fontSize: 12,
                         color: Colors.grey[600],
@@ -715,6 +716,9 @@ class _HomeScreenState extends State<HomeScreen> {
       }
     } catch (error) {
       AppLogger.error('Failed to fetch transactions for day: $error');
+      if (mounted) {
+        Provider.of<AuthProvider>(context, listen: false).logout();
+      }
     } finally {
       if (mounted) {
         setState(() {
