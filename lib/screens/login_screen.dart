@@ -174,6 +174,15 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     return CupertinoPageScaffold(
       backgroundColor: CupertinoColors.systemGroupedBackground,
+      navigationBar: CupertinoNavigationBar(
+        backgroundColor: CupertinoColors.white,
+        trailing: CupertinoButton(
+          padding: EdgeInsets.zero,
+          minSize: 36,
+          onPressed: _showApiConfigDialog,
+          child: const Icon(CupertinoIcons.gear, size: 22),
+        ),
+      ),
       child: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -269,12 +278,6 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                       ),
                       const SizedBox(height: 12),
-                      CupertinoButton(
-                        onPressed: _showApiConfigDialog,
-                        child: const Text('配置后端地址',
-                            style:
-                                TextStyle(color: CupertinoColors.activeBlue)),
-                      ),
                       const SizedBox(height: 6),
                       Text('当前API: $_apiBaseUrl',
                           style: const TextStyle(
