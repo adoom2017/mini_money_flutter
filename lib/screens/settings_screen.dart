@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
 import '../providers/user_provider.dart';
@@ -178,6 +179,37 @@ class SettingsScreen extends StatelessWidget {
                                       subtitle: '更新您的邮箱地址',
                                       onTap: () => _showEmailDialog(
                                           context, userProvider),
+                                    ),
+                                    const SizedBox(height: 24),
+                                    const Padding(
+                                      padding:
+                                          EdgeInsets.only(left: 4, bottom: 12),
+                                      child: Row(
+                                        children: [
+                                          Icon(
+                                            CupertinoIcons.clock,
+                                            size: 18,
+                                            color: Color(0xFF667EEA),
+                                          ),
+                                          SizedBox(width: 8),
+                                          Text(
+                                            '自动记账',
+                                            style: TextStyle(
+                                              fontSize: 18,
+                                              fontWeight: FontWeight.w600,
+                                              color: CupertinoColors.label,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    _buildSettingCard(
+                                      icon: CupertinoIcons.repeat,
+                                      iconColor: const Color(0xFF4ECDC4),
+                                      title: '定时记账管理',
+                                      subtitle: '管理您的定时记账任务',
+                                      onTap: () =>
+                                          context.push('/auto-transactions'),
                                     ),
                                   ],
                                 ),

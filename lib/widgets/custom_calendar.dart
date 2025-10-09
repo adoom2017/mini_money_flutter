@@ -86,17 +86,21 @@ class CustomCalendar extends StatelessWidget {
     const weekdays = ['日', '一', '二', '三', '四', '五', '六'];
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-      children: weekdays.map((weekday) {
+      children: weekdays.asMap().entries.map((entry) {
+        final weekday = entry.value;
+        final isWeekend = entry.key == 0 || entry.key == 6;
         return Container(
           width: 47, // 与日期单元格相同的宽度
-          padding: const EdgeInsets.symmetric(vertical: 8),
+          padding: const EdgeInsets.symmetric(vertical: 10),
           child: Text(
             weekday,
             textAlign: TextAlign.center,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 14,
-              fontWeight: FontWeight.w500,
-              color: CupertinoColors.secondaryLabel,
+              fontWeight: FontWeight.w600,
+              color: isWeekend
+                  ? CupertinoColors.systemBlue.withOpacity(0.7)
+                  : CupertinoColors.label,
             ),
           ),
         );
@@ -158,6 +162,8 @@ class CustomCalendar extends StatelessWidget {
     final isCurrentMonth = day.month == focusedMonth.month;
     final isToday = _isSameDay(day, DateTime.now());
     final isSelected = selectedDay != null && _isSameDay(day, selectedDay!);
+    final isWeekend =
+        day.weekday == DateTime.saturday || day.weekday == DateTime.sunday;
 
     // 获取当天的交易数据
     final dayTransactions = _getTransactionsForDay(day);
@@ -172,79 +178,149 @@ class CustomCalendar extends StatelessWidget {
       }
     }
 
+    final hasTransactions = totalIncome > 0 || totalExpense > 0;
+
     return Container(
-      width: 47, // 与星期标题保持一致的宽度
+      width: 47,
       height: 47,
       margin: const EdgeInsets.all(1),
       child: GestureDetector(
         onTap: isCurrentMonth ? () => onDaySelected(day) : null,
         child: Container(
           decoration: BoxDecoration(
-            color: isSelected
-                ? CupertinoColors.systemBlue.withOpacity(0.1)
-                : CupertinoColors.systemBackground,
-            borderRadius: BorderRadius.circular(8),
+            gradient: isSelected
+                ? LinearGradient(
+                    colors: [
+                      CupertinoColors.systemBlue.withOpacity(0.8),
+                      CupertinoColors.systemBlue.withOpacity(0.6),
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  )
+                : isToday
+                    ? LinearGradient(
+                        colors: [
+                          CupertinoColors.systemBlue.withOpacity(0.15),
+                          CupertinoColors.systemBlue.withOpacity(0.05),
+                        ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      )
+                    : null,
+            color: !isSelected && !isToday
+                ? (hasTransactions && isCurrentMonth
+                    ? CupertinoColors.systemGrey6.withOpacity(0.3)
+                    : null)
+                : null,
+            borderRadius: BorderRadius.circular(10),
             border: isSelected
-                ? Border.all(color: CupertinoColors.systemBlue, width: 2)
+                ? Border.all(
+                    color: CupertinoColors.systemBlue,
+                    width: 2,
+                  )
                 : isToday
                     ? Border.all(
-                        color: CupertinoColors.systemBlue.withOpacity(0.5),
-                        width: 1)
+                        color: CupertinoColors.systemBlue.withOpacity(0.6),
+                        width: 1.5,
+                      )
+                    : null,
+            boxShadow: isSelected
+                ? [
+                    BoxShadow(
+                      color: CupertinoColors.systemBlue.withOpacity(0.3),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ]
+                : isToday
+                    ? [
+                        BoxShadow(
+                          color: CupertinoColors.systemBlue.withOpacity(0.15),
+                          blurRadius: 4,
+                          offset: const Offset(0, 1),
+                        ),
+                      ]
                     : null,
           ),
-          child: Padding(
-            padding: const EdgeInsets.all(2),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
+          child: Stack(
+            children: [
+              // 日期数字
+              Center(
+                child: Text(
                   '${day.day}',
                   style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: isToday ? FontWeight.w600 : FontWeight.normal,
+                    fontSize: 14,
+                    fontWeight: isToday || isSelected
+                        ? FontWeight.w700
+                        : FontWeight.w500,
                     color: !isCurrentMonth
                         ? CupertinoColors.placeholderText
                         : isSelected
-                            ? CupertinoColors.systemBlue
+                            ? CupertinoColors.white
                             : isToday
                                 ? CupertinoColors.systemBlue
-                                : CupertinoColors.label,
+                                : isWeekend
+                                    ? CupertinoColors.systemBlue
+                                        .withOpacity(0.7)
+                                    : CupertinoColors.label,
                   ),
                 ),
-                if (isCurrentMonth && (totalIncome > 0 || totalExpense > 0))
-                  Container(
-                    constraints: const BoxConstraints(maxHeight: 16),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        if (totalIncome > 0)
-                          Text(
-                            '+${totalIncome.toStringAsFixed(0)}',
-                            style: const TextStyle(
-                              fontSize: 8,
-                              color: CupertinoColors.systemGreen,
-                              height: 1.0,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
+              ),
+              // 交易指示点
+              if (isCurrentMonth && hasTransactions)
+                Positioned(
+                  bottom: 4,
+                  left: 0,
+                  right: 0,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      if (totalIncome > 0)
+                        Container(
+                          width: 6,
+                          height: 6,
+                          margin: const EdgeInsets.symmetric(horizontal: 1),
+                          decoration: BoxDecoration(
+                            color: isSelected
+                                ? CupertinoColors.white
+                                : CupertinoColors.systemGreen,
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: (isSelected
+                                        ? CupertinoColors.white
+                                        : CupertinoColors.systemGreen)
+                                    .withOpacity(0.5),
+                                blurRadius: 2,
+                              ),
+                            ],
                           ),
-                        if (totalExpense > 0)
-                          Text(
-                            '-${totalExpense.toStringAsFixed(0)}',
-                            style: const TextStyle(
-                              fontSize: 8,
-                              color: CupertinoColors.systemRed,
-                              height: 1.0,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
+                        ),
+                      if (totalExpense > 0)
+                        Container(
+                          width: 6,
+                          height: 6,
+                          margin: const EdgeInsets.symmetric(horizontal: 1),
+                          decoration: BoxDecoration(
+                            color: isSelected
+                                ? CupertinoColors.white.withOpacity(0.9)
+                                : CupertinoColors.systemRed,
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: (isSelected
+                                        ? CupertinoColors.white
+                                        : CupertinoColors.systemRed)
+                                    .withOpacity(0.5),
+                                blurRadius: 2,
+                              ),
+                            ],
                           ),
-                      ],
-                    ),
+                        ),
+                    ],
                   ),
-              ],
-            ),
+                ),
+            ],
           ),
         ),
       ),

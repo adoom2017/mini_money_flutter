@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../providers/statistics_provider.dart';
 import '../models/statistics_summary.dart';
+import '../utils/category_utils.dart';
 
 class StatisticsScreen extends StatelessWidget {
   const StatisticsScreen({super.key});
@@ -557,10 +558,15 @@ class StatisticsScreen extends StatelessWidget {
                             if (value.toInt() >= stats.length) {
                               return const Text('');
                             }
+                            final categoryKey =
+                                stats[value.toInt()].categoryKey;
+                            final categoryName =
+                                CategoryUtils.getBuiltInCategoryName(
+                                    categoryKey);
                             return Padding(
                               padding: const EdgeInsets.only(top: 8),
                               child: Text(
-                                stats[value.toInt()].categoryKey,
+                                categoryName,
                                 style: TextStyle(
                                   fontSize: 11,
                                   color: Colors.grey[700],

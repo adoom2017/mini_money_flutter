@@ -2,6 +2,37 @@ import 'package:flutter/material.dart';
 import '../models/transaction_category.dart';
 
 class CategoryUtils {
+  /// 内置的分类名称映射（用于不需要从服务器加载分类的场景）
+  static const Map<String, String> _builtInCategoryNames = {
+    // 支出分类
+    'food': '餐饮',
+    'transport': '交通',
+    'shopping': '购物',
+    'entertainment': '娱乐',
+    'healthcare': '医疗',
+    'education': '教育',
+    'housing': '住房',
+    'communication': '通讯',
+    'travel': '旅行',
+    'clothing': '服饰',
+    'daily': '日常',
+    'beauty': '美容',
+    'sports': '运动',
+    'pets': '宠物',
+    'gifts': '礼物',
+    'charity': '公益',
+    'other_expense': '其他支出',
+
+    // 收入分类
+    'salary': '工资',
+    'bonus': '奖金',
+    'investment': '投资',
+    'parttime': '兼职',
+    'business': '生意',
+    'gift_income': '礼金',
+    'other_income': '其他收入',
+  };
+
   /// 获取统一的 emoji 文本样式
   /// 使用 fontFamilyFallback 确保跨平台 emoji 显示一致
   static TextStyle getEmojiTextStyle({
@@ -55,5 +86,10 @@ class CategoryUtils {
       List<TransactionCategory> categories, String categoryKey) {
     final category = findCategoryByKey(categories, categoryKey);
     return category?.name ?? categoryKey; // 默认返回key本身
+  }
+
+  /// 根据分类 key 获取内置的中文名称（用于不需要分类列表的场景）
+  static String getBuiltInCategoryName(String categoryKey) {
+    return _builtInCategoryNames[categoryKey] ?? categoryKey;
   }
 }

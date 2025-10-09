@@ -25,6 +25,12 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
   String _description = '';
   DateTime _selectedDate = DateTime.now();
 
+  // 定时记账相关
+  bool _enableAutoTransaction = false;
+  String _autoFrequency = 'monthly'; // daily, weekly, monthly, yearly
+  int _autoDayOfMonth = 1;
+  int _autoDayOfWeek = 1; // 1=周一
+
   List<TransactionCategory> _expenseCategories = [];
   List<TransactionCategory> _incomeCategories = [];
   bool _isLoading = true;
@@ -307,6 +313,10 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
 
       final response = await _apiService.createTransaction(transactionData);
       if (response.statusCode == 200 || response.statusCode == 201) {
+        // 如果启用了定时记账，创建自动记账任务
+        if (_enableAutoTransaction) {
+          await _createAutoTransaction();
+        }
         _handleNavigation();
       } else {
         _showAlert('保存失败，请重试');
@@ -314,6 +324,26 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     } catch (error) {
       AppLogger.error('保存交易失败: $error');
       _showAlert('保存失败，请重试');
+    }
+  }
+
+  Future<void> _createAutoTransaction() async {
+    try {
+      final autoTransactionData = {
+        'type': _type,
+        'amount': _amount,
+        'categoryKey': _selectedCategoryKey,
+        'description': _description,
+        'frequency': _autoFrequency,
+        if (_autoFrequency == 'weekly') 'dayOfWeek': _autoDayOfWeek,
+        if (_autoFrequency == 'monthly' || _autoFrequency == 'yearly')
+          'dayOfMonth': _autoDayOfMonth,
+      };
+
+      await _apiService.createAutoTransaction(autoTransactionData);
+    } catch (error) {
+      AppLogger.error('创建定时记账失败: $error');
+      // 不阻止正常交易保存，只记录错误
     }
   }
 
@@ -782,10 +812,273 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
               ],
             ),
           ),
+          const SizedBox(height: 16),
+          // 定时记账选项
+          _buildAutoTransactionSection(),
           const SizedBox(height: 20),
           // 计算器键盘
           _buildCalculatorKeyboard(),
         ],
+      ),
+    );
+  }
+
+  Widget _buildAutoTransactionSection() {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: CupertinoColors.systemBackground,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: CupertinoColors.systemGrey5,
+          width: 1,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(
+                CupertinoIcons.repeat,
+                color: Color(0xFF667EEA),
+                size: 20,
+              ),
+              const SizedBox(width: 8),
+              const Expanded(
+                child: Text(
+                  '定时记账',
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+              CupertinoSwitch(
+                value: _enableAutoTransaction,
+                activeColor: const Color(0xFF667EEA),
+                onChanged: (value) {
+                  setState(() {
+                    _enableAutoTransaction = value;
+                    if (value) {
+                      // 设置默认值
+                      _autoDayOfMonth = _selectedDate.day;
+                      _autoDayOfWeek = _selectedDate.weekday % 7;
+                    }
+                  });
+                },
+              ),
+            ],
+          ),
+          if (_enableAutoTransaction) ...[
+            const SizedBox(height: 12),
+            const Divider(height: 1),
+            const SizedBox(height: 12),
+            // 频率选择
+            Row(
+              children: [
+                const Text(
+                  '频率:',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: CupertinoColors.secondaryLabel,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: CupertinoSlidingSegmentedControl<String>(
+                    groupValue: _autoFrequency,
+                    children: const {
+                      'daily': Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 8),
+                        child: Text('每天', style: TextStyle(fontSize: 13)),
+                      ),
+                      'weekly': Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 8),
+                        child: Text('每周', style: TextStyle(fontSize: 13)),
+                      ),
+                      'monthly': Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 8),
+                        child: Text('每月', style: TextStyle(fontSize: 13)),
+                      ),
+                      'yearly': Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 8),
+                        child: Text('每年', style: TextStyle(fontSize: 13)),
+                      ),
+                    },
+                    onValueChanged: (value) {
+                      setState(() {
+                        _autoFrequency = value!;
+                      });
+                    },
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            // 根据频率显示不同的选项
+            if (_autoFrequency == 'weekly')
+              Row(
+                children: [
+                  const Text(
+                    '星期:',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: CupertinoColors.secondaryLabel,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: CupertinoButton(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 8),
+                      color: CupertinoColors.systemGrey6,
+                      onPressed: () => _showDayOfWeekPicker(),
+                      child: Text(
+                        [
+                          '周日',
+                          '周一',
+                          '周二',
+                          '周三',
+                          '周四',
+                          '周五',
+                          '周六'
+                        ][_autoDayOfWeek],
+                        style: const TextStyle(
+                          color: CupertinoColors.label,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            if (_autoFrequency == 'monthly' || _autoFrequency == 'yearly')
+              Row(
+                children: [
+                  Text(
+                    _autoFrequency == 'monthly' ? '日期:' : '日期:',
+                    style: const TextStyle(
+                      fontSize: 14,
+                      color: CupertinoColors.secondaryLabel,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: CupertinoButton(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 8),
+                      color: CupertinoColors.systemGrey6,
+                      onPressed: () => _showDayOfMonthPicker(),
+                      child: Text(
+                        _autoFrequency == 'monthly'
+                            ? '每月 $_autoDayOfMonth 日'
+                            : '每年 ${_selectedDate.month}月 $_autoDayOfMonth 日',
+                        style: const TextStyle(
+                          color: CupertinoColors.label,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  void _showDayOfWeekPicker() {
+    showCupertinoModalPopup(
+      context: context,
+      builder: (context) => Container(
+        height: 200,
+        color: CupertinoColors.systemBackground,
+        child: Column(
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                CupertinoButton(
+                  child: const Text('取消'),
+                  onPressed: () => Navigator.pop(context),
+                ),
+                CupertinoButton(
+                  child: const Text('确定'),
+                  onPressed: () => Navigator.pop(context),
+                ),
+              ],
+            ),
+            Expanded(
+              child: CupertinoPicker(
+                itemExtent: 32,
+                scrollController: FixedExtentScrollController(
+                  initialItem: _autoDayOfWeek,
+                ),
+                onSelectedItemChanged: (index) {
+                  setState(() {
+                    _autoDayOfWeek = index;
+                  });
+                },
+                children: const [
+                  Text('周日'),
+                  Text('周一'),
+                  Text('周二'),
+                  Text('周三'),
+                  Text('周四'),
+                  Text('周五'),
+                  Text('周六'),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showDayOfMonthPicker() {
+    showCupertinoModalPopup(
+      context: context,
+      builder: (context) => Container(
+        height: 200,
+        color: CupertinoColors.systemBackground,
+        child: Column(
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                CupertinoButton(
+                  child: const Text('取消'),
+                  onPressed: () => Navigator.pop(context),
+                ),
+                CupertinoButton(
+                  child: const Text('确定'),
+                  onPressed: () => Navigator.pop(context),
+                ),
+              ],
+            ),
+            Expanded(
+              child: CupertinoPicker(
+                itemExtent: 32,
+                scrollController: FixedExtentScrollController(
+                  initialItem: _autoDayOfMonth - 1,
+                ),
+                onSelectedItemChanged: (index) {
+                  setState(() {
+                    _autoDayOfMonth = index + 1;
+                  });
+                },
+                children: List.generate(
+                  31,
+                  (index) => Text('${index + 1} 日'),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

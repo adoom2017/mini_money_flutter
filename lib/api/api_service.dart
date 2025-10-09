@@ -185,4 +185,17 @@ class ApiService {
           body: {'name': n, 'icon': i, 'type': t});
   Future<http.Response> deleteAssetCategory(String id) =>
       _request('DELETE', '/asset-categories/$id');
+
+  // Auto Transactions
+  Future<http.Response> getAutoTransactions() =>
+      _request('GET', '/auto-transactions');
+  Future<http.Response> createAutoTransaction(Map<String, dynamic> data) =>
+      _request('POST', '/auto-transactions', body: data);
+  Future<http.Response> updateAutoTransaction(
+          int id, Map<String, dynamic> data) =>
+      _request('PUT', '/auto-transactions/$id', body: data);
+  Future<http.Response> deleteAutoTransaction(int id) =>
+      _request('DELETE', '/auto-transactions/$id');
+  Future<http.Response> toggleAutoTransaction(int id) =>
+      _request('PUT', '/auto-transactions/$id/toggle');
 }

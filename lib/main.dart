@@ -13,6 +13,7 @@ import 'package:mini_money_flutter/screens/details_screen.dart';
 import 'package:mini_money_flutter/screens/statistics_screen.dart';
 import 'package:mini_money_flutter/screens/settings_screen.dart';
 import 'package:mini_money_flutter/screens/add_transaction_screen.dart';
+import 'package:mini_money_flutter/screens/auto_transactions_screen.dart';
 import 'package:mini_money_flutter/screens/main_layout.dart';
 import 'package:mini_money_flutter/providers/auth_provider.dart';
 import 'package:mini_money_flutter/providers/home_provider.dart';
@@ -109,6 +110,10 @@ class MyApp extends StatelessWidget {
         GoRoute(
           path: '/add-transaction',
           builder: (context, state) => const AddTransactionScreen(),
+        ),
+        GoRoute(
+          path: '/auto-transactions',
+          builder: (context, state) => const AutoTransactionsScreen(),
         ),
       ],
       redirect: (BuildContext context, GoRouterState state) {
