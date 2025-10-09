@@ -480,7 +480,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
 
   Widget _buildTopBar() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 8),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
           colors: [Color(0xFF667EEA), Color(0xFF764BA2)],
@@ -531,7 +531,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
 
   Widget _buildTypeSelector() {
     return Container(
-      margin: const EdgeInsets.all(16),
+      margin: const EdgeInsets.all(8),
       decoration: BoxDecoration(
         color: CupertinoColors.systemBackground,
         borderRadius: BorderRadius.circular(8),
@@ -693,7 +693,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
         children: [
           // 金额显示
           Container(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.all(10),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -779,10 +779,10 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
               ],
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 10),
           // 定时记账选项
           _buildAutoTransactionSection(),
-          const SizedBox(height: 20),
+          const SizedBox(height: 10),
           // 计算器键盘
           _buildCalculatorKeyboard(),
         ],
@@ -810,7 +810,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
         children: [
           // 标题行
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+            padding: const EdgeInsets.fromLTRB(10, 5, 10, 5),
             child: Row(
               children: [
                 Container(
