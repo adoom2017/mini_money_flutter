@@ -28,8 +28,6 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
   // 定时记账相关
   bool _enableAutoTransaction = false;
   String _autoFrequency = 'monthly'; // daily, weekly, monthly, yearly
-  int _autoDayOfMonth = 1;
-  int _autoDayOfWeek = 1; // 1=周一
 
   List<TransactionCategory> _expenseCategories = [];
   List<TransactionCategory> _incomeCategories = [];
@@ -335,9 +333,14 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
         'categoryKey': _selectedCategoryKey,
         'description': _description,
         'frequency': _autoFrequency,
-        if (_autoFrequency == 'weekly') 'dayOfWeek': _autoDayOfWeek,
+        'executionHour': _selectedDate.hour, // 使用交易时间的小时
+        'executionMinute': _selectedDate.minute, // 使用交易时间的分钟
+        if (_autoFrequency == 'weekly')
+          'dayOfWeek': _selectedDate.weekday % 7, // 使用交易日期的星期
         if (_autoFrequency == 'monthly' || _autoFrequency == 'yearly')
-          'dayOfMonth': _autoDayOfMonth,
+          'dayOfMonth': _selectedDate.day, // 使用交易日期的日
+        if (_autoFrequency == 'yearly')
+          'monthOfYear': _selectedDate.month, // 使用交易时间的月份
       };
 
       await _apiService.createAutoTransaction(autoTransactionData);
@@ -421,42 +424,6 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     );
   }
 
-  Future<void> _showDescriptionInput() async {
-    final TextEditingController controller =
-        TextEditingController(text: _description);
-
-    await showCupertinoDialog<String>(
-      context: context,
-      builder: (BuildContext context) => CupertinoAlertDialog(
-        title: const Text('添加备注'),
-        content: Padding(
-          padding: const EdgeInsets.only(top: 12),
-          child: CupertinoTextField(
-            controller: controller,
-            placeholder: '请输入备注信息',
-            maxLines: 3,
-            maxLength: 100,
-          ),
-        ),
-        actions: [
-          CupertinoDialogAction(
-            child: const Text('取消'),
-            onPressed: () => Navigator.of(context).pop(),
-          ),
-          CupertinoDialogAction(
-            child: const Text('确定'),
-            onPressed: () {
-              setState(() {
-                _description = controller.text;
-              });
-              Navigator.of(context).pop();
-            },
-          ),
-        ],
-      ),
-    );
-  }
-
   void _showAlert(String message) {
     showCupertinoDialog(
       context: context,
@@ -513,7 +480,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
 
   Widget _buildTopBar() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
           colors: [Color(0xFF667EEA), Color(0xFF764BA2)],
@@ -826,85 +793,101 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
   Widget _buildAutoTransactionSection() {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
-      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: CupertinoColors.systemBackground,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: CupertinoColors.systemGrey5,
-          width: 1,
-        ),
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: CupertinoColors.separator.withOpacity(0.2),
+            spreadRadius: 0,
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              const Icon(
-                CupertinoIcons.repeat,
-                color: Color(0xFF667EEA),
-                size: 20,
-              ),
-              const SizedBox(width: 8),
-              const Expanded(
-                child: Text(
-                  '定时记账',
-                  style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-              CupertinoSwitch(
-                value: _enableAutoTransaction,
-                activeColor: const Color(0xFF667EEA),
-                onChanged: (value) {
-                  setState(() {
-                    _enableAutoTransaction = value;
-                    if (value) {
-                      // 设置默认值
-                      _autoDayOfMonth = _selectedDate.day;
-                      _autoDayOfWeek = _selectedDate.weekday % 7;
-                    }
-                  });
-                },
-              ),
-            ],
-          ),
-          if (_enableAutoTransaction) ...[
-            const SizedBox(height: 12),
-            const Divider(height: 1),
-            const SizedBox(height: 12),
-            // 频率选择
-            Row(
+          // 标题行
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+            child: Row(
               children: [
-                const Text(
-                  '频率:',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: CupertinoColors.secondaryLabel,
+                Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        const Color(0xFF667EEA).withOpacity(0.1),
+                        const Color(0xFF667EEA).withOpacity(0.2),
+                      ],
+                    ),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(
+                    CupertinoIcons.repeat,
+                    color: Color(0xFF667EEA),
+                    size: 18,
                   ),
                 ),
                 const SizedBox(width: 12),
-                Expanded(
-                  child: CupertinoSlidingSegmentedControl<String>(
+                const Expanded(
+                  child: Text(
+                    '定时记账',
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+                Transform.scale(
+                  scale: 0.85,
+                  child: CupertinoSwitch(
+                    value: _enableAutoTransaction,
+                    activeColor: const Color(0xFF667EEA),
+                    onChanged: (value) {
+                      setState(() {
+                        _enableAutoTransaction = value;
+                      });
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // 展开内容
+          if (_enableAutoTransaction) ...[
+            const Divider(height: 1, indent: 16, endIndent: 16),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // 频率选择
+                  CupertinoSlidingSegmentedControl<String>(
                     groupValue: _autoFrequency,
+                    padding: const EdgeInsets.all(2),
                     children: const {
                       'daily': Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 8),
-                        child: Text('每天', style: TextStyle(fontSize: 13)),
+                        padding:
+                            EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                        child: Text('每天', style: TextStyle(fontSize: 12)),
                       ),
                       'weekly': Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 8),
-                        child: Text('每周', style: TextStyle(fontSize: 13)),
+                        padding:
+                            EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                        child: Text('每周', style: TextStyle(fontSize: 12)),
                       ),
                       'monthly': Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 8),
-                        child: Text('每月', style: TextStyle(fontSize: 13)),
+                        padding:
+                            EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                        child: Text('每月', style: TextStyle(fontSize: 12)),
                       ),
                       'yearly': Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 8),
-                        child: Text('每年', style: TextStyle(fontSize: 13)),
+                        padding:
+                            EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                        child: Text('每年', style: TextStyle(fontSize: 12)),
                       ),
                     },
                     onValueChanged: (value) {
@@ -913,174 +896,53 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                       });
                     },
                   ),
-                ),
-              ],
+                  const SizedBox(height: 10),
+                  // 规则说明
+                  Row(
+                    children: [
+                      const Icon(
+                        CupertinoIcons.info_circle,
+                        size: 13,
+                        color: Color(0xFF667EEA),
+                      ),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: Text(
+                          _getAutoTransactionDescription(),
+                          style: const TextStyle(
+                            fontSize: 11,
+                            color: CupertinoColors.secondaryLabel,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
-            const SizedBox(height: 12),
-            // 根据频率显示不同的选项
-            if (_autoFrequency == 'weekly')
-              Row(
-                children: [
-                  const Text(
-                    '星期:',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: CupertinoColors.secondaryLabel,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: CupertinoButton(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 8),
-                      color: CupertinoColors.systemGrey6,
-                      onPressed: () => _showDayOfWeekPicker(),
-                      child: Text(
-                        [
-                          '周日',
-                          '周一',
-                          '周二',
-                          '周三',
-                          '周四',
-                          '周五',
-                          '周六'
-                        ][_autoDayOfWeek],
-                        style: const TextStyle(
-                          color: CupertinoColors.label,
-                          fontSize: 14,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            if (_autoFrequency == 'monthly' || _autoFrequency == 'yearly')
-              Row(
-                children: [
-                  Text(
-                    _autoFrequency == 'monthly' ? '日期:' : '日期:',
-                    style: const TextStyle(
-                      fontSize: 14,
-                      color: CupertinoColors.secondaryLabel,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: CupertinoButton(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 8),
-                      color: CupertinoColors.systemGrey6,
-                      onPressed: () => _showDayOfMonthPicker(),
-                      child: Text(
-                        _autoFrequency == 'monthly'
-                            ? '每月 $_autoDayOfMonth 日'
-                            : '每年 ${_selectedDate.month}月 $_autoDayOfMonth 日',
-                        style: const TextStyle(
-                          color: CupertinoColors.label,
-                          fontSize: 14,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
           ],
         ],
       ),
     );
   }
 
-  void _showDayOfWeekPicker() {
-    showCupertinoModalPopup(
-      context: context,
-      builder: (context) => Container(
-        height: 200,
-        color: CupertinoColors.systemBackground,
-        child: Column(
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                CupertinoButton(
-                  child: const Text('取消'),
-                  onPressed: () => Navigator.pop(context),
-                ),
-                CupertinoButton(
-                  child: const Text('确定'),
-                  onPressed: () => Navigator.pop(context),
-                ),
-              ],
-            ),
-            Expanded(
-              child: CupertinoPicker(
-                itemExtent: 32,
-                scrollController: FixedExtentScrollController(
-                  initialItem: _autoDayOfWeek,
-                ),
-                onSelectedItemChanged: (index) {
-                  setState(() {
-                    _autoDayOfWeek = index;
-                  });
-                },
-                children: const [
-                  Text('周日'),
-                  Text('周一'),
-                  Text('周二'),
-                  Text('周三'),
-                  Text('周四'),
-                  Text('周五'),
-                  Text('周六'),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _showDayOfMonthPicker() {
-    showCupertinoModalPopup(
-      context: context,
-      builder: (context) => Container(
-        height: 200,
-        color: CupertinoColors.systemBackground,
-        child: Column(
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                CupertinoButton(
-                  child: const Text('取消'),
-                  onPressed: () => Navigator.pop(context),
-                ),
-                CupertinoButton(
-                  child: const Text('确定'),
-                  onPressed: () => Navigator.pop(context),
-                ),
-              ],
-            ),
-            Expanded(
-              child: CupertinoPicker(
-                itemExtent: 32,
-                scrollController: FixedExtentScrollController(
-                  initialItem: _autoDayOfMonth - 1,
-                ),
-                onSelectedItemChanged: (index) {
-                  setState(() {
-                    _autoDayOfMonth = index + 1;
-                  });
-                },
-                children: List.generate(
-                  31,
-                  (index) => Text('${index + 1} 日'),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
+  // 获取定时记账规则描述
+  String _getAutoTransactionDescription() {
+    final timeStr = DateFormat('HH:mm').format(_selectedDate);
+    switch (_autoFrequency) {
+      case 'daily':
+        return '每天 $timeStr 自动记账';
+      case 'weekly':
+        final weekDays = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
+        final dayOfWeek = _selectedDate.weekday % 7;
+        return '每周${weekDays[dayOfWeek]} $timeStr 自动记账';
+      case 'monthly':
+        return '每月 ${_selectedDate.day} 日 $timeStr 自动记账';
+      case 'yearly':
+        return '每年 ${_selectedDate.month}月${_selectedDate.day}日 $timeStr 自动记账';
+      default:
+        return '';
+    }
   }
 
   Widget _buildCalculatorKeyboard() {

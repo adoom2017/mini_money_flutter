@@ -8,6 +8,7 @@ import '../providers/transaction_provider.dart';
 import '../models/transaction.dart';
 import '../models/transaction_category.dart';
 import '../utils/category_utils.dart';
+import '../utils/app_logger.dart';
 import '../api/api_service.dart';
 
 class DetailsScreen extends StatefulWidget {
@@ -50,7 +51,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
         });
       }
     } catch (e) {
-      print('加载分类失败: $e');
+      AppLogger.error('加载分类失败', e);
     }
   }
 

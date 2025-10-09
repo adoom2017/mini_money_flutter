@@ -108,9 +108,9 @@ class AutoTransaction {
       case 'weekly':
         return '每周$dayOfWeekName';
       case 'monthly':
-        return '每月${dayOfMonth}日';
+        return '每月$dayOfMonth日';
       case 'yearly':
-        return '每年${nextExecutionDate?.month}月${dayOfMonth}日';
+        return '每年${nextExecutionDate?.month}月$dayOfMonth日';
       default:
         return '';
     }
