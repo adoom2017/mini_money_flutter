@@ -1,4 +1,6 @@
+import 'dart:io' show Platform;
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -23,22 +25,24 @@ import 'package:mini_money_flutter/api/api_service.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // 配置窗口管理器
-  await windowManager.ensureInitialized();
+  // 配置窗口管理器（仅在桌面平台）
+  if (!kIsWeb && (Platform.isWindows || Platform.isMacOS || Platform.isLinux)) {
+    await windowManager.ensureInitialized();
 
-  WindowOptions windowOptions = const WindowOptions(
-    size: Size(600, 1200),
-    center: true,
-    backgroundColor: CupertinoColors.systemBackground,
-    skipTaskbar: false,
-    titleBarStyle: TitleBarStyle.normal,
-    windowButtonVisibility: false,
-  );
+    WindowOptions windowOptions = const WindowOptions(
+      size: Size(600, 1200),
+      center: true,
+      backgroundColor: CupertinoColors.systemBackground,
+      skipTaskbar: false,
+      titleBarStyle: TitleBarStyle.normal,
+      windowButtonVisibility: false,
+    );
 
-  await windowManager.waitUntilReadyToShow(windowOptions, () async {
-    await windowManager.show();
-    await windowManager.focus();
-  });
+    await windowManager.waitUntilReadyToShow(windowOptions, () async {
+      await windowManager.show();
+      await windowManager.focus();
+    });
+  }
 
   runApp(
     MultiProvider(
