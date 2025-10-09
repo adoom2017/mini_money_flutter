@@ -36,10 +36,22 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
   // 原始输入（用于表达式支持）
   String _rawInput = '';
 
+  // 备注输入控制器
+  final TextEditingController _descriptionController = TextEditingController();
+
   @override
   void initState() {
     super.initState();
     _fetchCategories();
+    _descriptionController.addListener(() {
+      _description = _descriptionController.text;
+    });
+  }
+
+  @override
+  void dispose() {
+    _descriptionController.dispose();
+    super.dispose();
   }
 
   Future<void> _fetchCategories() async {
@@ -677,13 +689,6 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(
-                  CupertinoIcons.money_dollar_circle,
-                  color: _type == 'expense'
-                      ? CupertinoColors.systemRed
-                      : CupertinoColors.systemGreen,
-                  size: 28,
-                ),
                 const SizedBox(width: 8),
                 Text(
                   '¥$_displayAmount',
@@ -717,55 +722,49 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Row(
               children: [
-                Expanded(
-                  child: GestureDetector(
-                    onTap: _showDateTimePicker,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 8),
-                      child: Row(
-                        children: [
-                          const Icon(
-                            CupertinoIcons.calendar,
-                            color: Color(0xFFFF9800),
-                            size: 18,
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            DateFormat('MM/dd HH:mm').format(_selectedDate),
-                            style: const TextStyle(
-                              color: CupertinoColors.label,
-                              fontSize: 14,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
                 GestureDetector(
-                  onTap: _showDescriptionInput,
+                  onTap: _showDateTimePicker,
                   child: Container(
                     padding: const EdgeInsets.symmetric(vertical: 8),
                     child: Row(
                       children: [
                         const Icon(
-                          CupertinoIcons.pencil,
-                          color: Color(0xFF667EEA),
-                          size: 18,
+                          CupertinoIcons.calendar,
+                          color: Color(0xFFFF9800),
+                          size: 24,
                         ),
                         const SizedBox(width: 8),
                         Text(
-                          _description.isEmpty ? '点击填写备注' : _description,
-                          style: TextStyle(
-                            color: _description.isEmpty
-                                ? CupertinoColors.systemGrey
-                                : CupertinoColors.label,
-                            fontSize: 14,
+                          DateFormat('MM/dd HH:mm').format(_selectedDate),
+                          style: const TextStyle(
+                            color: CupertinoColors.label,
+                            fontSize: 20,
                           ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
                         ),
                       ],
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 20),
+                Expanded(
+                  child: CupertinoTextField(
+                    controller: _descriptionController,
+                    placeholder: '请输入备注',
+                    maxLength: 100,
+                    style: const TextStyle(fontSize: 14),
+                    decoration: BoxDecoration(
+                      color: CupertinoColors.systemGrey6,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    prefix: const Padding(
+                      padding: EdgeInsets.only(left: 8),
+                      child: Icon(
+                        CupertinoIcons.pencil,
+                        color: Color(0xFF667EEA),
+                        size: 20,
+                      ),
                     ),
                   ),
                 ),
