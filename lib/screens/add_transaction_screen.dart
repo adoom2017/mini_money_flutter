@@ -604,7 +604,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
         padding: const EdgeInsets.all(16),
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 5,
-          childAspectRatio: 1.0,
+          childAspectRatio: 0.85, // 调整为 0.85，给文字更多垂直空间
           crossAxisSpacing: 16,
           mainAxisSpacing: 16,
         ),
@@ -623,10 +623,11 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
             },
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min, // 使用最小尺寸
               children: [
                 Container(
-                  width: 48,
-                  height: 48,
+                  width: 46,
+                  height: 46,
                   decoration: BoxDecoration(
                     gradient: isSelected
                         ? LinearGradient(
@@ -645,20 +646,30 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                           ]
                         : [],
                   ),
-                  child: Icon(
-                    CategoryUtils.getCategoryIcon(category.key),
-                    color: isSelected ? Colors.white : color,
-                    size: 24,
+                  child: Center(
+                    child: Text(
+                      CategoryUtils.getCategoryIcon(category),
+                      style: CategoryUtils.getEmojiTextStyle(
+                        fontSize: 26,
+                      ),
+                      textAlign: TextAlign.center,
+                      textHeightBehavior: const TextHeightBehavior(
+                        applyHeightToFirstAscent: false,
+                        applyHeightToLastDescent: false,
+                      ),
+                    ),
                   ),
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 3),
                 Text(
-                  CategoryUtils.getCategoryName(category.key),
+                  CategoryUtils.getCategoryName(category),
                   style: TextStyle(
-                    fontSize: 12,
+                    fontSize: 11,
                     color: isSelected ? color : CupertinoColors.label,
                   ),
                   textAlign: TextAlign.center,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ],
             ),

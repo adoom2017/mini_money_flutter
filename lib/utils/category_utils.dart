@@ -1,93 +1,59 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import '../models/transaction_category.dart';
 
 class CategoryUtils {
-  /// 获取分类对应的图标
-  static IconData getCategoryIcon(String categoryKey) {
-    switch (categoryKey) {
-      // 支出分类图标 🍔⚕️🚌🏠🍿🎓📞💬📈🛒📝
-      case 'food':
-        return Icons.restaurant; // 餐饮 🍔
-      case 'medical':
-        return Icons.medical_services; // 医疗 ⚕️
-      case 'transport':
-        return CupertinoIcons.bus; // 交通 🚌
-      case 'housing':
-        return CupertinoIcons.house_fill; // 住房 🏠
-      case 'snacks':
-        return Icons.icecream; // 零食 🍿
-      case 'learning':
-        return CupertinoIcons.book_fill; // 学习 🎓
-      case 'communication':
-        return CupertinoIcons.phone_fill; // 通讯 📞
-      case 'social':
-        return CupertinoIcons.person_2_fill; // 社交 💬
-      case 'investment':
-        return CupertinoIcons.chart_bar_circle_fill; // 投资 📈
-      case 'shopping':
-        return CupertinoIcons.shopping_cart; // 购物 🛒
+  /// 获取统一的 emoji 文本样式
+  /// 使用 fontFamilyFallback 确保跨平台 emoji 显示一致
+  static TextStyle getEmojiTextStyle({
+    required double fontSize,
+    Color? color,
+    double? height,
+  }) {
+    return TextStyle(
+      fontSize: fontSize,
+      color: color,
+      height: height ?? 1.0,
+      fontFamilyFallback: const [
+        'Apple Color Emoji', // iOS/macOS
+        'Segoe UI Emoji', // Windows
+        'Noto Color Emoji', // Android/Linux
+        'Segoe UI Symbol', // Windows fallback
+        'Android Emoji', // Android fallback
+      ],
+    );
+  }
 
-      // 收入分类图标 💼👨‍💻💰🧧🎁
-      case 'salary':
-        return CupertinoIcons.briefcase_fill; // 工资 💼
-      case 'part_time':
-        return CupertinoIcons.clock_fill; // 兼职 👨‍💻
-      case 'financial':
-        return CupertinoIcons.money_dollar_circle_fill; // 理财 💰
-      case 'red_packet':
-        return CupertinoIcons.gift_fill; // 红包 🧧
+  /// 获取分类对应的图标 (emoji字符串)
+  static String getCategoryIcon(TransactionCategory category) {
+    return category.icon;
+  }
 
-      // 通用分类
-      case 'other':
-        return CupertinoIcons.ellipsis_circle_fill; // 其他 📝 或 🎁
+  /// 获取分类对应的名称
+  static String getCategoryName(TransactionCategory category) {
+    return category.name;
+  }
 
-      // 默认图标
-      default:
-        return CupertinoIcons.circle_fill;
+  /// 根据分类 key 从分类列表中查找分类对象
+  static TransactionCategory? findCategoryByKey(
+      List<TransactionCategory> categories, String categoryKey) {
+    try {
+      return categories.firstWhere((cat) => cat.key == categoryKey);
+    } catch (e) {
+      return null;
     }
   }
 
-  /// 获取分类对应的中文名称
-  static String getCategoryName(String categoryKey) {
-    switch (categoryKey) {
-      // 支出分类
-      case 'food':
-        return '餐饮';
-      case 'medical':
-        return '医疗';
-      case 'transport':
-        return '交通';
-      case 'housing':
-        return '住房';
-      case 'snacks':
-        return '零食';
-      case 'learning':
-        return '学习';
-      case 'communication':
-        return '通讯';
-      case 'social':
-        return '社交';
-      case 'investment':
-        return '投资';
-      case 'shopping':
-        return '购物';
+  /// 根据分类 key 从分类列表中获取图标（兼容旧代码）
+  static String getCategoryIconByKey(
+      List<TransactionCategory> categories, String categoryKey) {
+    final category = findCategoryByKey(categories, categoryKey);
+    return category?.icon ?? '❓'; // 默认问号图标
+  }
 
-      // 收入分类
-      case 'salary':
-        return '工资';
-      case 'part_time':
-        return '兼职';
-      case 'financial':
-        return '理财';
-      case 'red_packet':
-        return '红包';
-
-      // 通用分类
-      case 'other':
-        return '其他';
-
-      default:
-        return categoryKey;
-    }
+  /// 根据分类 key 从分类列表中获取名称（兼容旧代码）
+  static String getCategoryNameByKey(
+      List<TransactionCategory> categories, String categoryKey) {
+    final category = findCategoryByKey(categories, categoryKey);
+    return category?.name ?? categoryKey; // 默认返回key本身
   }
 }

@@ -8,6 +8,7 @@ import '../providers/home_provider.dart';
 import '../providers/auth_provider.dart';
 import '../widgets/custom_calendar.dart';
 import '../models/transaction.dart';
+import '../models/transaction_category.dart';
 import '../api/api_service.dart';
 import 'package:intl/intl.dart';
 import '../utils/app_logger.dart';
@@ -27,6 +28,7 @@ class _HomeScreenState extends State<HomeScreen> {
   HomeProvider? _homeProvider;
   bool _isInitialized = false;
   bool _isLoadingTransactions = false;
+  List<TransactionCategory> _allCategories = []; // 所有分类列表
 
   @override
   void initState() {
@@ -35,6 +37,29 @@ class _HomeScreenState extends State<HomeScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _initializeData();
     });
+    // 加载分类
+    _fetchCategories();
+  }
+
+  Future<void> _fetchCategories() async {
+    try {
+      final response = await _apiService.getCategories();
+      if (response.statusCode == 200 && mounted) {
+        final data = jsonDecode(response.body);
+        setState(() {
+          _allCategories = [
+            ...(data['expense'] as List? ?? [])
+                .where((c) => c != null)
+                .map((c) => TransactionCategory.fromJson(c)),
+            ...(data['income'] as List? ?? [])
+                .where((c) => c != null)
+                .map((c) => TransactionCategory.fromJson(c)),
+          ];
+        });
+      }
+    } catch (e) {
+      AppLogger.error('加载分类失败: $e');
+    }
   }
 
   @override
@@ -162,7 +187,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: Column(
                       children: [
                         SizedBox(
-                          height: 44,
+                          height: 55,
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
@@ -571,30 +596,43 @@ class _HomeScreenState extends State<HomeScreen> {
           Hero(
             tag: 'transaction_${transaction.id}_icon',
             child: Container(
-              width: 44,
-              height: 44,
+              width: 50,
+              height: 50,
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
-                    bgColor,
-                    bgColor.withOpacity(0.6),
+                    bgColor.withOpacity(0.8),
+                    bgColor.withOpacity(0.4),
                   ],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
                 shape: BoxShape.circle,
+                border: Border.all(
+                  color: iconColor.withOpacity(0.2),
+                  width: 1.5,
+                ),
                 boxShadow: [
                   BoxShadow(
-                    color: iconColor.withOpacity(0.2),
+                    color: iconColor.withOpacity(0.15),
                     blurRadius: 8,
                     offset: const Offset(0, 2),
                   ),
                 ],
               ),
-              child: Icon(
-                CategoryUtils.getCategoryIcon(transaction.categoryKey),
-                color: iconColor,
-                size: 20,
+              child: Center(
+                child: Text(
+                  CategoryUtils.getCategoryIconByKey(
+                      _allCategories, transaction.categoryKey),
+                  style: CategoryUtils.getEmojiTextStyle(
+                    fontSize: 24,
+                  ),
+                  textAlign: TextAlign.center,
+                  textHeightBehavior: const TextHeightBehavior(
+                    applyHeightToFirstAscent: false,
+                    applyHeightToLastDescent: false,
+                  ),
+                ),
               ),
             ),
           ),
@@ -605,7 +643,8 @@ class _HomeScreenState extends State<HomeScreen> {
               children: [
                 Text(
                   transaction.description.isEmpty
-                      ? CategoryUtils.getCategoryName(transaction.categoryKey)
+                      ? CategoryUtils.getCategoryNameByKey(
+                          _allCategories, transaction.categoryKey)
                       : transaction.description,
                   style: const TextStyle(
                     fontSize: 15,
@@ -644,7 +683,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        CategoryUtils.getCategoryName(transaction.categoryKey),
+                        CategoryUtils.getCategoryNameByKey(
+                            _allCategories, transaction.categoryKey),
                         style: TextStyle(
                           fontSize: 12,
                           color: Colors.grey[600],

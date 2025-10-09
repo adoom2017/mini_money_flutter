@@ -3,9 +3,12 @@ import 'package:flutter/cupertino.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
+import 'dart:convert';
 import '../providers/transaction_provider.dart';
 import '../models/transaction.dart';
+import '../models/transaction_category.dart';
 import '../utils/category_utils.dart';
+import '../api/api_service.dart';
 
 class DetailsScreen extends StatefulWidget {
   const DetailsScreen({super.key});
@@ -17,6 +20,7 @@ class DetailsScreen extends StatefulWidget {
 class _DetailsScreenState extends State<DetailsScreen> {
   final ScrollController _scrollController = ScrollController();
   final Set<String> _expandedDates = <String>{}; // 跟踪展开的日期
+  List<TransactionCategory> _allCategories = []; // 所有分类列表
 
   @override
   void initState() {
@@ -24,6 +28,30 @@ class _DetailsScreenState extends State<DetailsScreen> {
     // 默认展开今天的日期
     final today = DateFormat('yyyy-MM-dd').format(DateTime.now());
     _expandedDates.add(today);
+    // 加载分类
+    _fetchCategories();
+  }
+
+  Future<void> _fetchCategories() async {
+    try {
+      final apiService = ApiService();
+      final response = await apiService.getCategories();
+      if (response.statusCode == 200 && mounted) {
+        final data = jsonDecode(response.body);
+        setState(() {
+          _allCategories = [
+            ...(data['expense'] as List? ?? [])
+                .where((c) => c != null)
+                .map((c) => TransactionCategory.fromJson(c)),
+            ...(data['income'] as List? ?? [])
+                .where((c) => c != null)
+                .map((c) => TransactionCategory.fromJson(c)),
+          ];
+        });
+      }
+    } catch (e) {
+      print('加载分类失败: $e');
+    }
   }
 
   @override
@@ -400,36 +428,53 @@ class _DetailsScreenState extends State<DetailsScreen> {
         children: [
           // 图标容器 - 优化设计
           Container(
-            width: 44,
-            height: 44,
+            width: 50,
+            height: 50,
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: transaction.type == 'expense'
                     ? [
-                        CupertinoColors.systemRed.withOpacity(0.2),
-                        CupertinoColors.systemRed.withOpacity(0.1),
+                        CupertinoColors.systemRed.withOpacity(0.15),
+                        CupertinoColors.systemRed.withOpacity(0.05),
                       ]
                     : [
-                        CupertinoColors.systemGreen.withOpacity(0.2),
-                        CupertinoColors.systemGreen.withOpacity(0.1),
+                        CupertinoColors.systemGreen.withOpacity(0.15),
+                        CupertinoColors.systemGreen.withOpacity(0.05),
                       ],
               ),
               shape: BoxShape.circle,
               border: Border.all(
                 color: transaction.type == 'expense'
-                    ? CupertinoColors.systemRed.withOpacity(0.3)
-                    : CupertinoColors.systemGreen.withOpacity(0.3),
-                width: 1,
+                    ? CupertinoColors.systemRed.withOpacity(0.2)
+                    : CupertinoColors.systemGreen.withOpacity(0.2),
+                width: 1.5,
               ),
+              boxShadow: [
+                BoxShadow(
+                  color: (transaction.type == 'expense'
+                          ? CupertinoColors.systemRed
+                          : CupertinoColors.systemGreen)
+                      .withOpacity(0.15),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
             ),
-            child: Icon(
-              CategoryUtils.getCategoryIcon(transaction.categoryKey),
-              color: transaction.type == 'expense'
-                  ? CupertinoColors.systemRed
-                  : CupertinoColors.systemGreen,
-              size: 20,
+            child: Center(
+              child: Text(
+                CategoryUtils.getCategoryIconByKey(
+                    _allCategories, transaction.categoryKey),
+                style: CategoryUtils.getEmojiTextStyle(
+                  fontSize: 24,
+                ),
+                textAlign: TextAlign.center,
+                textHeightBehavior: const TextHeightBehavior(
+                  applyHeightToFirstAscent: false,
+                  applyHeightToLastDescent: false,
+                ),
+              ),
             ),
           ),
           const SizedBox(width: 16),
@@ -440,7 +485,8 @@ class _DetailsScreenState extends State<DetailsScreen> {
               children: [
                 Text(
                   transaction.description.isEmpty
-                      ? CategoryUtils.getCategoryName(transaction.categoryKey)
+                      ? CategoryUtils.getCategoryNameByKey(
+                          _allCategories, transaction.categoryKey)
                       : transaction.description,
                   style: const TextStyle(
                     fontSize: 16,
@@ -458,7 +504,8 @@ class _DetailsScreenState extends State<DetailsScreen> {
                     ),
                     const SizedBox(width: 4),
                     Text(
-                      CategoryUtils.getCategoryName(transaction.categoryKey),
+                      CategoryUtils.getCategoryNameByKey(
+                          _allCategories, transaction.categoryKey),
                       style: const TextStyle(
                         fontSize: 13,
                         color: CupertinoColors.placeholderText,
