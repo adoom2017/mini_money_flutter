@@ -247,7 +247,7 @@ class StatisticsProvider with ChangeNotifier {
             children: [
               // 顶部操作栏
               Container(
-                height: 50,
+                height: 55,
                 decoration: BoxDecoration(
                   color: CupertinoColors.systemBackground,
                   border: Border(

@@ -33,6 +33,8 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
   String _displayAmount = '0.00';
   bool _hasDecimal = false;
   int _decimalPlaces = 0;
+  // 原始输入（用于表达式支持）
+  String _rawInput = '';
 
   @override
   void initState() {
@@ -73,61 +75,191 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
 
   void _onNumberPressed(String number) {
     setState(() {
-      if (_displayAmount == '0.00') {
-        _displayAmount = '$number.00';
-      } else if (_hasDecimal && _decimalPlaces < 2) {
-        _displayAmount = _displayAmount.substring(
-                0, _displayAmount.length - (2 - _decimalPlaces)) +
-            number +
-            '0' * (1 - _decimalPlaces);
-        _decimalPlaces++;
-      } else if (!_hasDecimal) {
-        String integerPart = _displayAmount.split('.')[0];
-        if (integerPart.length < 8) {
-          // 限制整数部分最多8位
-          _displayAmount = '$integerPart$number.00';
+      // 如果当前为表达式模式（包含运算符），则直接把数字追加到原始输入
+      if (RegExp(r'[+\-*/×÷]').hasMatch(_rawInput)) {
+        if (_rawInput.isEmpty) _rawInput = '';
+        _rawInput += number;
+      } else {
+        // 原有的数字输入逻辑
+        if (_displayAmount == '0.00') {
+          _displayAmount = '$number.00';
+        } else if (_hasDecimal && _decimalPlaces < 2) {
+          _displayAmount = _displayAmount.substring(
+                  0, _displayAmount.length - (2 - _decimalPlaces)) +
+              number +
+              '0' * (1 - _decimalPlaces);
+          _decimalPlaces++;
+        } else if (!_hasDecimal) {
+          String integerPart = _displayAmount.split('.')[0];
+          if (integerPart.length < 8) {
+            // 限制整数部分最多8位
+            _displayAmount = '$integerPart$number.00';
+          }
         }
+        _rawInput = _displayAmount.replaceAll(',', '');
+        _amount = double.parse(_displayAmount);
       }
-      _amount = double.parse(_displayAmount);
     });
   }
 
   void _onDecimalPressed() {
-    if (!_hasDecimal) {
-      setState(() {
+    setState(() {
+      // 表达式模式下直接在原始输入追加小数点
+      if (RegExp(r'[+\-*/×÷]').hasMatch(_rawInput)) {
+        // 在当前操作数中只允许一个小数点
+        final parts = _rawInput.split(RegExp(r'[+\-*/×÷×÷]'));
+        final last = parts.isNotEmpty ? parts.last : '';
+        if (!last.contains('.')) {
+          _rawInput += '.';
+        }
+      } else if (!_hasDecimal) {
         _hasDecimal = true;
         _decimalPlaces = 0;
         _displayAmount =
             '${_displayAmount.substring(0, _displayAmount.length - 3)}.00';
-      });
-    }
+        _rawInput = _displayAmount.replaceAll(',', '');
+      }
+    });
   }
 
   void _onDeletePressed() {
     setState(() {
-      if (_hasDecimal && _decimalPlaces > 0) {
-        _decimalPlaces--;
-        if (_decimalPlaces == 0) {
-          _displayAmount =
-              '${_displayAmount.substring(0, _displayAmount.length - 2)}00';
-        } else {
-          _displayAmount =
-              '${_displayAmount.substring(0, _displayAmount.length - 1)}0';
+      // 如果为表达式模式，删除原始输入最后一个字符
+      if (RegExp(r'[+\-*/×÷]').hasMatch(_rawInput)) {
+        if (_rawInput.isNotEmpty) {
+          _rawInput = _rawInput.substring(0, _rawInput.length - 1);
         }
-      } else if (_hasDecimal && _decimalPlaces == 0) {
-        _hasDecimal = false;
-        _displayAmount =
-            '${_displayAmount.substring(0, _displayAmount.length - 1)}00';
+        // 保持为空字符串而不是 '0'
+        if (_rawInput.isEmpty) _rawInput = '';
       } else {
-        String integerPart = _displayAmount.split('.')[0];
-        if (integerPart.length > 1) {
-          integerPart = integerPart.substring(0, integerPart.length - 1);
+        if (_hasDecimal && _decimalPlaces > 0) {
+          _decimalPlaces--;
+          if (_decimalPlaces == 0) {
+            _displayAmount =
+                '${_displayAmount.substring(0, _displayAmount.length - 2)}00';
+          } else {
+            _displayAmount =
+                '${_displayAmount.substring(0, _displayAmount.length - 1)}0';
+          }
+        } else if (_hasDecimal && _decimalPlaces == 0) {
+          _hasDecimal = false;
+          _displayAmount =
+              '${_displayAmount.substring(0, _displayAmount.length - 1)}00';
         } else {
-          integerPart = '0';
+          String integerPart = _displayAmount.split('.')[0];
+          if (integerPart.length > 1) {
+            integerPart = integerPart.substring(0, integerPart.length - 1);
+          } else {
+            integerPart = '0';
+          }
+          _displayAmount = '$integerPart.00';
         }
-        _displayAmount = '$integerPart.00';
+        _rawInput = _displayAmount.replaceAll(',', '');
+        _amount = double.parse(_displayAmount);
       }
-      _amount = double.parse(_displayAmount);
+    });
+  }
+
+  bool get _isExpressionMode =>
+      _rawInput.isNotEmpty && RegExp(r'[+\-*/×÷]').hasMatch(_rawInput);
+
+  // 评估简单算术表达式（支持 + - * /, 小数）
+  double? _evaluateMathExpression(String expr) {
+    try {
+      // 替换可视化乘除符号
+      expr = expr.replaceAll('×', '*').replaceAll('÷', '/');
+      // 移除空格
+      expr = expr.replaceAll(' ', '');
+      // 使用逆波兰（Shunting Yard）算法
+      final outputQueue = <String>[];
+      final opStack = <String>[];
+
+      int i = 0;
+      String numberBuffer() {
+        final sb = StringBuffer();
+        while (i < expr.length && (RegExp(r'[0-9\.]').hasMatch(expr[i]))) {
+          sb.write(expr[i]);
+          i++;
+        }
+        return sb.toString();
+      }
+
+      String precedence(String op) {
+        if (op == '+' || op == '-') return '1';
+        if (op == '*' || op == '/') return '2';
+        return '0';
+      }
+
+      while (i < expr.length) {
+        final ch = expr[i];
+        if (RegExp(r'[0-9\.]').hasMatch(ch)) {
+          final num = numberBuffer();
+          outputQueue.add(num);
+          continue;
+        }
+        if (ch == '+' || ch == '-' || ch == '*' || ch == '/') {
+          while (opStack.isNotEmpty &&
+              precedence(opStack.last).compareTo(precedence(ch)) >= 0) {
+            outputQueue.add(opStack.removeLast());
+          }
+          opStack.add(ch);
+          i++;
+          continue;
+        }
+        // 未知字符，跳过
+        i++;
+      }
+
+      while (opStack.isNotEmpty) {
+        outputQueue.add(opStack.removeLast());
+      }
+
+      // 计算 RPN
+      final evalStack = <double>[];
+      for (final token in outputQueue) {
+        if (token == '+' || token == '-' || token == '*' || token == '/') {
+          if (evalStack.length < 2) return null;
+          final b = evalStack.removeLast();
+          final a = evalStack.removeLast();
+          double res = 0;
+          if (token == '+') res = a + b;
+          if (token == '-') res = a - b;
+          if (token == '*') res = a * b;
+          if (token == '/') {
+            if (b == 0) return null;
+            res = a / b;
+          }
+          evalStack.add(res);
+        } else {
+          evalStack.add(double.parse(token));
+        }
+      }
+
+      if (evalStack.length != 1) return null;
+      return evalStack.first;
+    } catch (e) {
+      AppLogger.error('表达式解析错误: $e');
+      return null;
+    }
+  }
+
+  void _onEvaluatePressed() {
+    final result = _evaluateMathExpression(_rawInput);
+    if (result == null || result.isNaN) {
+      _showAlert('表达式错误');
+      return;
+    }
+    setState(() {
+      _amount = result;
+      _displayAmount = result.toStringAsFixed(2);
+      _rawInput = _displayAmount;
+      _hasDecimal = _displayAmount.contains('.');
+      if (_hasDecimal) {
+        final parts = _displayAmount.split('.');
+        _decimalPlaces = parts[1].length;
+      } else {
+        _decimalPlaces = 0;
+      }
     });
   }
 
@@ -566,6 +698,20 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
               ],
             ),
           ),
+          // 表达式显示（仅在表达式模式时显示）
+          if (_rawInput.isNotEmpty && _isExpressionMode)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8.0),
+              child: Text(
+                _rawInput,
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.grey[600],
+                  fontFamily: 'RobotoMono',
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ),
           // 日期和备注
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -639,13 +785,15 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
       padding: const EdgeInsets.all(16),
       child: Column(
         children: [
-          _buildKeyboardRow(['1', '2', '3', '+×']),
+          _buildKeyboardRow(['1', '2', '3', '+']),
           const SizedBox(height: 12),
-          _buildKeyboardRow(['4', '5', '6', '-÷']),
+          _buildKeyboardRow(['4', '5', '6', '-']),
           const SizedBox(height: 12),
-          _buildKeyboardRow(['7', '8', '9', '保存再记']),
+          _buildKeyboardRow(['7', '8', '9', '×']),
           const SizedBox(height: 12),
-          _buildKeyboardRow(['.', '0', '⌫', '完成']),
+          _buildKeyboardRow(['.', '0', '⌫', '÷']),
+          const SizedBox(height: 12),
+          _buildKeyboardRow(['完成']),
         ],
       ),
     );
@@ -699,6 +847,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
         onPressed = _onDeletePressed;
         break;
       case '完成':
+        final isExpr = _isExpressionMode;
         child = Container(
           height: 50,
           decoration: BoxDecoration(
@@ -707,10 +856,10 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
             ),
             borderRadius: BorderRadius.circular(8),
           ),
-          child: const Center(
+          child: Center(
             child: Text(
-              '完成',
-              style: TextStyle(
+              isExpr ? '=' : '完成',
+              style: const TextStyle(
                 fontSize: 16,
                 color: Colors.white,
                 fontWeight: FontWeight.w500,
@@ -718,7 +867,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
             ),
           ),
         );
-        onPressed = _saveTransaction;
+        onPressed = isExpr ? _onEvaluatePressed : _saveTransaction;
         break;
       case '.':
         child = Container(
@@ -758,6 +907,46 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
             ),
           );
           onPressed = () => _onNumberPressed(key);
+        } else if (key == '+' || key == '-' || key == '×' || key == '÷') {
+          // 运算符处理：如果当前已是表达式且最后一个是运算符则替换，否则追加
+          child = Container(
+            height: 50,
+            decoration: BoxDecoration(
+              color: CupertinoColors.systemGrey5,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Center(
+              child: Text(
+                key,
+                style: const TextStyle(
+                  fontSize: 20,
+                  color: CupertinoColors.label,
+                ),
+              ),
+            ),
+          );
+          onPressed = () {
+            setState(() {
+              // 若 raw 为空且当前 display 有值，则以当前显示为起始
+              if (_rawInput.isEmpty && _displayAmount != '0.00') {
+                _rawInput = _displayAmount;
+              }
+              // 如果仍为空，不允许直接以运算符开始
+              if (_rawInput.isEmpty) return;
+              final lastChar = _rawInput[_rawInput.length - 1];
+              if (lastChar == '+' ||
+                  lastChar == '-' ||
+                  lastChar == '*' ||
+                  lastChar == '/' ||
+                  lastChar == '×' ||
+                  lastChar == '÷') {
+                // 替换最后一个运算符
+                _rawInput = _rawInput.substring(0, _rawInput.length - 1) + key;
+              } else {
+                _rawInput += key;
+              }
+            });
+          };
         } else {
           child = Container(
             height: 50,
